@@ -85,6 +85,35 @@ export async function listRelationships(
   }
 }
 
+/**
+ * Permission check via Keto's check API. Works for both plain relations and
+ * OPL-computed permits (e.g. Organization "manage" → admins). Returns whether
+ * the subject is allowed; throws on transport errors.
+ */
+export async function checkPermission(
+  tenant: TenantContext,
+  input: {
+    namespace: string;
+    object: string;
+    relation: string;
+    subjectId: string;
+  },
+): Promise<boolean> {
+  const url = new URL("/relation-tuples/check", readUrl(tenant));
+  url.searchParams.set("namespace", input.namespace);
+  url.searchParams.set("object", input.object);
+  url.searchParams.set("relation", input.relation);
+  url.searchParams.set("subject_id", input.subjectId);
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) {
+    // Keto returns 403 with {allowed:false} for a denied check — treat as not allowed.
+    if (res.status === 403) return false;
+    await handleError(res, url.pathname);
+  }
+  const payload = (await res.json()) as { allowed?: boolean };
+  return payload.allowed === true;
+}
+
 export async function createRelationship(
   tenant: TenantContext,
   tuple: RelationTuple,
