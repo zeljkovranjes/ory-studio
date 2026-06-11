@@ -3,7 +3,16 @@ import { EVENT_NAMES, insertEvent } from "@/lib/events";
 import { timingSafeEqual } from "@/lib/constant-time";
 import { classifyIp } from "@/lib/geo";
 import { enabledHttpsStreamUrls } from "@/lib/event-streams";
+import { verifyApiKey } from "@/lib/api-keys";
 import { DEFAULT_TENANT_ID } from "@/lib/tenant";
+
+/** True if the presented token is the env collector token or a valid studio key. */
+async function collectorAuthorized(provided: string): Promise<boolean> {
+  const envToken = process.env.STUDIO_COLLECTOR_TOKEN;
+  if (envToken && timingSafeEqual(provided, envToken)) return true;
+  // Studio-issued API keys (verified by hash lookup).
+  return verifyApiKey(provided).catch(() => false);
+}
 
 /** Fire-and-forget fan-out to enabled HTTPS event streams. Never blocks. */
 async function fanOut(event: string, payload: unknown): Promise<void> {
@@ -36,9 +45,8 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ event: string }> },
 ) {
-  const token = process.env.STUDIO_COLLECTOR_TOKEN;
   const provided = request.headers.get("x-collector-token") ?? "";
-  if (!token || !timingSafeEqual(provided, token)) {
+  if (!provided || !(await collectorAuthorized(provided))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
