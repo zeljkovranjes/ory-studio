@@ -5,7 +5,7 @@ import {
   validateOrganizationInput,
 } from "@/lib/organizations";
 import { validateStreamInput } from "@/lib/event-streams";
-import { validateSamlInput } from "@/lib/saml";
+import { validateSamlInput, validateConnectionInput } from "@/lib/saml";
 import { validateThemeTokens, DEFAULT_THEME } from "@/lib/theme";
 
 describe("parseDomains", () => {
@@ -105,6 +105,52 @@ describe("validateSamlInput", () => {
         idpEntityId: "",
       }),
     ).toThrow(/http\(s\)/);
+  });
+});
+
+describe("validateConnectionInput", () => {
+  it("accepts a SAML connection with a metadata URL", () => {
+    expect(() =>
+      validateConnectionInput({
+        protocol: "saml",
+        name: "Okta",
+        idpMetadataUrl: "https://idp/meta",
+      }),
+    ).not.toThrow();
+  });
+  it("accepts an OIDC connection with issuer + client id", () => {
+    expect(() =>
+      validateConnectionInput({
+        protocol: "oidc",
+        name: "Google",
+        oidcIssuerUrl: "https://accounts.google.com",
+        oidcClientId: "abc.apps",
+      }),
+    ).not.toThrow();
+  });
+  it("rejects OIDC without issuer or client id", () => {
+    expect(() =>
+      validateConnectionInput({
+        protocol: "oidc",
+        name: "Google",
+        oidcClientId: "abc",
+      }),
+    ).toThrow(/issuer URL/);
+    expect(() =>
+      validateConnectionInput({
+        protocol: "oidc",
+        name: "Google",
+        oidcIssuerUrl: "https://accounts.google.com",
+      }),
+    ).toThrow(/client ID/);
+  });
+  it("rejects an unknown protocol", () => {
+    expect(() =>
+      validateConnectionInput({
+        protocol: "ldap" as "saml",
+        name: "x",
+      }),
+    ).toThrow(/Unknown SSO protocol/);
   });
 });
 
