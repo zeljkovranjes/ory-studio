@@ -18,6 +18,7 @@ import {
 } from "@/components/ui";
 import { Flash } from "@/components/forms";
 import { RecoveryCode } from "./RecoveryCode";
+import { TraitsEditor } from "./TraitsEditor";
 import {
   deleteIdentityAction,
   revokeSessionsAction,
@@ -189,10 +190,11 @@ export default async function IdentityDetailPage({
         )}
       </Card>
 
-      <Card title="Traits">
-        <pre className="overflow-x-auto rounded bg-canvas p-3 font-mono text-xs">
-          {JSON.stringify(identity.traits, null, 2)}
-        </pre>
+      <Card
+        title="Traits"
+        description="Identity traits as stored in Kratos. Edits are validated against the identity schema."
+      >
+        <TraitsEditor identityId={identity.id} traits={identity.traits} />
       </Card>
 
       <Card
