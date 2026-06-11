@@ -51,6 +51,8 @@ export interface CourierMessage {
   subject: string;
   template_type: string;
   created_at: string;
+  /** Present on the single-message admin GET, not on the list. */
+  body?: string;
 }
 
 export interface PageResult<T> {
@@ -139,7 +141,7 @@ export async function listSessions(
 
 export async function listCourierMessages(
   tenant: TenantContext,
-  opts: { pageSize?: number; pageToken?: string } = {},
+  opts: { pageSize?: number; pageToken?: string; status?: string } = {},
 ): Promise<PageResult<CourierMessage>> {
   try {
     const { data, link } = await adminGet<CourierMessage[]>(
@@ -148,12 +150,25 @@ export async function listCourierMessages(
       {
         page_size: String(opts.pageSize ?? 25),
         page_token: opts.pageToken,
+        status: opts.status,
       },
     );
     return { items: data, nextPageToken: parseNextPageToken(link) };
   } catch (err) {
     return { items: [], error: (err as Error).message };
   }
+}
+
+/** Fetch a single courier message including its rendered body. */
+export async function getCourierMessage(
+  tenant: TenantContext,
+  id: string,
+): Promise<CourierMessage> {
+  const { data } = await adminGet<CourierMessage>(
+    tenant,
+    `/admin/courier/messages/${encodeURIComponent(id)}`,
+  );
+  return data;
 }
 
 /** Primary human-readable identifier of an identity (email, username, …). */
