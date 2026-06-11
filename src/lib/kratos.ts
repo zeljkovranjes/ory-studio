@@ -255,6 +255,28 @@ export async function updateIdentityTraits(
   );
 }
 
+/** Mark a verifiable address verified/unverified via a JSON Patch. The index
+ * must be a validated array position (see parseAddressIndex). */
+export async function setAddressVerified(
+  tenant: TenantContext,
+  id: string,
+  index: number,
+  verified: boolean,
+): Promise<KratosIdentity> {
+  return adminSend<KratosIdentity>(
+    tenant,
+    "PATCH",
+    `/admin/identities/${encodeURIComponent(id)}`,
+    [
+      {
+        op: "replace",
+        path: `/verifiable_addresses/${index}/verified`,
+        value: verified,
+      },
+    ],
+  );
+}
+
 /** Replace an identity's admin or public metadata via a JSON Patch. */
 export async function updateIdentityMetadata(
   tenant: TenantContext,
