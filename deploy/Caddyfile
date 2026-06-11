@@ -1,0 +1,27 @@
+# Caddy reverse proxy for a production ory-studio deployment.
+# Subdomain-routed with automatic HTTPS (Let's Encrypt) when real domains are set.
+# Domains come from the environment (see docker-compose.prod.yml).
+
+# Studio admin console — keep this behind your VPN / IP allow-list.
+{$STUDIO_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy studio:3000
+}
+
+# Account experience (end-user login / registration / recovery / verification).
+{$AUTH_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy account-experience:4455
+}
+
+# Kratos public API (self-service flows the account experience calls).
+{$KRATOS_PUBLIC_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy kratos:4433
+}
+
+# Hydra public OAuth2 / OpenID Connect endpoints.
+{$HYDRA_PUBLIC_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy hydra:4444
+}
