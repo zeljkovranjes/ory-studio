@@ -19,6 +19,7 @@ import {
 import { Flash } from "@/components/forms";
 import { RecoveryCode } from "./RecoveryCode";
 import { TraitsEditor } from "./TraitsEditor";
+import { MetadataEditor } from "./MetadataEditor";
 import {
   deleteIdentityAction,
   revokeSessionsAction,
@@ -196,6 +197,28 @@ export default async function IdentityDetailPage({
         description="Identity traits as stored in Kratos. Edits are validated against the identity schema."
       >
         <TraitsEditor identityId={identity.id} traits={identity.traits} />
+      </Card>
+
+      <Card
+        title="Admin metadata"
+        description="Private JSON metadata, never exposed to the identity. Useful for back-office data."
+      >
+        <MetadataEditor
+          identityId={identity.id}
+          field="metadata_admin"
+          value={identity.metadata_admin}
+        />
+      </Card>
+
+      <Card
+        title="Public metadata"
+        description="JSON metadata readable by the identity (e.g. surfaced in the session)."
+      >
+        <MetadataEditor
+          identityId={identity.id}
+          field="metadata_public"
+          value={identity.metadata_public}
+        />
       </Card>
 
       <Card
