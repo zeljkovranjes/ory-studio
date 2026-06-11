@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens mirrored 1:1 from Ory Console's own theme tokens
+ * (the --ory-theme-* CSS custom properties, extracted from the live console).
+ * These are token *values* (colors, font names, measured sizes) — the
+ * legitimately-reusable design layer. Components are our own implementation.
+ */
+@theme {
+  --font-sans: var(--font-inter), "Inter", system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* UI type scale — console runs body/controls at 13.2px */
+  --text-sm: 0.825rem; /* 13.2px */
+  --text-sm--line-height: 1.43;
+  --text-xs: 0.6875rem; /* 11px */
+  --text-xs--line-height: 1.45;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5;
+
+  /* accent (--ory-theme-accent-*) */
+  --color-accent: #3d53f5;
+  --color-accent-muted: #6475f7;
+  --color-accent-emphasis: #3142c4;
+  --color-accent-disabled: #e0e0e0;
+  --color-accent-subtle: #eceefe;
+
+  /* foreground (--ory-theme-foreground-*) */
+  --color-fg: #171717;
+  --color-fg-muted: #616161;
+  --color-fg-subtle: #9e9e9e;
+  --color-fg-disabled: #bdbdbd;
+  --color-fg-on-accent: #ffffff;
+
+  /* background (--ory-theme-background-*) */
+  --color-surface: #ffffff;
+  --color-canvas: #fcfcfc;
+  --color-bg-subtle: #eeeeee;
+
+  /* error / success (--ory-theme-error-*, --ory-theme-success-*) */
+  --color-error: #9c0f2e;
+  --color-error-subtle: #fce8ec;
+  --color-error-muted: #e95c7b;
+  --color-error-emphasis: #df1642;
+  --color-success-emphasis: #18a957;
+
+  /* border + inputs (--ory-theme-border-*, --ory-theme-input-*) */
+  --color-border: #eeeeee;
+  --color-input-text: #424242;
+  --color-input-placeholder: #9e9e9e;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
