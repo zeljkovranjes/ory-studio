@@ -6,6 +6,7 @@ import {
 } from "@/lib/kratos";
 import { listRelationships } from "@/lib/keto";
 import { getOrganization, ORG_NAMESPACE } from "@/lib/organizations";
+import { summarizeCredentials } from "@/lib/credentials";
 import { currentTenant } from "@/lib/tenant";
 import {
   Badge,
@@ -17,7 +18,11 @@ import {
 } from "@/components/ui";
 import { Flash } from "@/components/forms";
 import { RecoveryCode } from "./RecoveryCode";
-import { deleteIdentityAction, revokeSessionsAction } from "./actions";
+import {
+  deleteIdentityAction,
+  revokeSessionsAction,
+  setIdentityStateAction,
+} from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +48,7 @@ export default async function IdentityDetailPage({
     );
   }
   const sessions = await listIdentitySessions(tenant, id);
+  const credentials = summarizeCredentials(identity);
 
   // Organization memberships: Keto relationships in the Organization namespace
   // where this identity is the subject. Resolve each org's name from the DB.
@@ -75,10 +81,24 @@ export default async function IdentityDetailPage({
       <Card title="Overview">
         <dl className="grid max-w-2xl grid-cols-2 gap-x-6 gap-y-3 text-sm">
           <dt className="text-fg-muted">State</dt>
-          <dd>
+          <dd className="flex items-center gap-3">
             <Badge tone={identity.state === "active" ? "success" : "muted"}>
               {identity.state}
             </Badge>
+            <form action={setIdentityStateAction}>
+              <input type="hidden" name="id" value={identity.id} />
+              <input
+                type="hidden"
+                name="state"
+                value={identity.state === "active" ? "inactive" : "active"}
+              />
+              <button
+                type="submit"
+                className="rounded border border-border bg-surface px-2.5 py-1 text-xs font-medium text-fg hover:bg-bg-subtle"
+              >
+                {identity.state === "active" ? "Deactivate" : "Activate"}
+              </button>
+            </form>
           </dd>
           <dt className="text-fg-muted">Schema</dt>
           <dd>{identity.schema_id}</dd>
@@ -87,6 +107,37 @@ export default async function IdentityDetailPage({
           <dt className="text-fg-muted">Updated</dt>
           <dd>{new Date(identity.updated_at).toLocaleString()}</dd>
         </dl>
+      </Card>
+
+      <Card
+        title="Credentials"
+        description="Login methods this identity has configured. Secrets are never shown — Kratos redacts them."
+      >
+        {credentials.length === 0 ? (
+          <EmptyState message="No credentials configured." />
+        ) : (
+          <Table headers={["Method", "Identifiers", "Added"]}>
+            {credentials.map((cred) => (
+              <tr key={cred.type}>
+                <td className="px-3 py-2 font-medium">{cred.label}</td>
+                <td className="px-3 py-2 text-fg-muted">
+                  {cred.identifiers.length ? (
+                    <span className="font-mono text-xs">
+                      {cred.identifiers.join(", ")}
+                    </span>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td className="px-3 py-2 text-fg-muted">
+                  {cred.createdAt
+                    ? new Date(cred.createdAt).toLocaleDateString()
+                    : "—"}
+                </td>
+              </tr>
+            ))}
+          </Table>
+        )}
       </Card>
 
       <Card title="Addresses">
