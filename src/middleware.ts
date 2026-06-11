@@ -26,8 +26,8 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   // Protect everything except Next.js internals, static assets, the login
-  // page, and the webhook collector (which authenticates with its own token).
+  // page, the webhook collector (own token), and the public brand theme CSS.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|login|api/internal/events).*)",
+    "/((?!_next/static|_next/image|favicon.ico|login|api/internal/events|account-experience/theme\\.css).*)",
   ],
 };
