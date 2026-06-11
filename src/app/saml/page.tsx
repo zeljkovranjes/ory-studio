@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { listSamlConnections } from "@/lib/saml";
+import { listOrganizations } from "@/lib/organizations";
 import { currentTenant } from "@/lib/tenant";
 import {
   Badge,
@@ -22,9 +24,15 @@ export default async function SamlPage({
   const tenant = await currentTenant();
 
   let connections: Awaited<ReturnType<typeof listSamlConnections>> = [];
+  const orgNames = new Map<string, string>();
   let dbError: string | null = null;
   try {
-    connections = await listSamlConnections(tenant.id);
+    const [conns, orgs] = await Promise.all([
+      listSamlConnections(tenant.id),
+      listOrganizations(tenant.id).catch(() => []),
+    ]);
+    connections = conns;
+    for (const o of orgs) orgNames.set(o.id, o.name);
   } catch (err) {
     dbError = (err as Error).message;
   }
@@ -43,12 +51,29 @@ export default async function SamlPage({
         ) : connections.length === 0 ? (
           <EmptyState message="No SAML connections yet. Add one below." />
         ) : (
-          <Table headers={["Name", "IdP", "Status", ""]}>
+          <Table headers={["Name", "Protocol", "Scope", "Endpoint", "Status", ""]}>
             {connections.map((c) => (
               <tr key={c.id} className="hover:bg-canvas">
                 <td className="px-4 py-3 font-medium">{c.name}</td>
+                <td className="px-4 py-3">
+                  <Badge tone="muted">{c.protocol.toUpperCase()}</Badge>
+                </td>
+                <td className="px-4 py-3 text-sm">
+                  {c.org_id ? (
+                    <Link
+                      href={`/organizations/${c.org_id}`}
+                      className="text-accent hover:underline"
+                    >
+                      {orgNames.get(c.org_id) ?? `org ${c.org_id}`}
+                    </Link>
+                  ) : (
+                    <span className="text-fg-muted">Global</span>
+                  )}
+                </td>
                 <td className="px-4 py-3 font-mono text-xs text-fg-muted">
-                  {c.idp_metadata_url ?? c.idp_entity_id ?? "—"}
+                  {c.protocol === "oidc"
+                    ? (c.oidc_issuer_url ?? "—")
+                    : (c.idp_metadata_url ?? c.idp_entity_id ?? "—")}
                 </td>
                 <td className="px-4 py-3">
                   <Badge tone={c.enabled ? "success" : "muted"}>
