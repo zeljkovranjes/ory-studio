@@ -55,6 +55,8 @@ export async function listRelationships(
   tenant: TenantContext,
   opts: {
     namespace?: string;
+    object?: string;
+    relation?: string;
     subjectId?: string;
     pageToken?: string;
     pageSize?: number;
@@ -64,6 +66,8 @@ export async function listRelationships(
     const url = new URL("/relation-tuples", readUrl(tenant));
     url.searchParams.set("page_size", String(opts.pageSize ?? 30));
     if (opts.namespace) url.searchParams.set("namespace", opts.namespace);
+    if (opts.object) url.searchParams.set("object", opts.object);
+    if (opts.relation) url.searchParams.set("relation", opts.relation);
     if (opts.subjectId) url.searchParams.set("subject_id", opts.subjectId);
     if (opts.pageToken) url.searchParams.set("page_token", opts.pageToken);
     const res = await fetch(url, { cache: "no-store" });
