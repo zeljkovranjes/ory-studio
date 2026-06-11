@@ -29,6 +29,27 @@ export const DEFAULT_THEME: ThemeTokens = {
 
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
+/**
+ * Render theme tokens as the --ory-theme-* CSS custom properties that Ory
+ * Elements (the account-experience UI) reads. Only valid hex tokens are emitted.
+ */
+export function themeToCss(tokens: ThemeTokens): string {
+  const vars: [string, string][] = [
+    ["--ory-theme-accent-def", tokens.accent],
+    ["--ory-theme-accent-emphasis", tokens.accentEmphasis],
+    ["--ory-theme-accent-subtle", tokens.accentSubtle],
+    ["--ory-theme-foreground-def", tokens.foreground],
+    ["--ory-theme-background-surface", tokens.surface],
+    ["--ory-theme-border-def", tokens.border],
+    ["--ory-theme-error-def", tokens.error],
+  ];
+  const body = vars
+    .filter(([, value]) => HEX_RE.test(value))
+    .map(([name, value]) => `  ${name}: ${value};`)
+    .join("\n");
+  return `:root {\n${body}\n}\n`;
+}
+
 /** Pure validation: every token must be a #rrggbb hex. Throws on the first bad one. */
 export function validateThemeTokens(tokens: ThemeTokens): void {
   for (const [key, value] of Object.entries(tokens)) {
