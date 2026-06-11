@@ -1,10 +1,13 @@
 import Link from "next/link";
 import {
+  emailDomain,
+  findOrganizationByDomain,
   listOrganizations,
   ORG_NAMESPACE,
   orgObjectKey,
 } from "@/lib/organizations";
 import { listRelationships } from "@/lib/keto";
+import { listSamlConnectionsForOrg } from "@/lib/saml";
 import { currentTenant } from "@/lib/tenant";
 import {
   Badge,
@@ -22,10 +25,42 @@ export const dynamic = "force-dynamic";
 export default async function OrganizationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; warning?: string; error?: string }>;
+  searchParams: Promise<{
+    saved?: string;
+    warning?: string;
+    error?: string;
+    test_email?: string;
+  }>;
 }) {
-  const flash = await searchParams;
+  const { test_email, ...flash } = await searchParams;
   const tenant = await currentTenant();
+
+  // Domain → SSO routing preview (home-realm discovery).
+  let routing: {
+    email: string;
+    domain: string | null;
+    orgName?: string;
+    orgId?: string;
+    connections: { name: string; enabled: boolean }[];
+  } | null = null;
+  if (test_email) {
+    const domain = emailDomain(test_email);
+    const org = domain
+      ? await findOrganizationByDomain(tenant.id, domain).catch(() => null)
+      : null;
+    const conns = org
+      ? (await listSamlConnectionsForOrg(tenant.id, org.id).catch(() => []))
+          .filter((c) => c.enabled)
+          .map((c) => ({ name: c.name, enabled: c.enabled }))
+      : [];
+    routing = {
+      email: test_email,
+      domain,
+      orgName: org?.name,
+      orgId: org?.id,
+      connections: conns,
+    };
+  }
 
   let orgs: Awaited<ReturnType<typeof listOrganizations>> = [];
   let dbError: string | null = null;
@@ -52,6 +87,66 @@ export default async function OrganizationsPage({
         description="Centralize access management with organizations and Single Sign-On. Group users by company, attach verified email domains, and wire up per-organization SAML or OIDC connections."
       />
       <Flash {...flash} />
+
+      <Card
+        title="SSO domain routing"
+        description="Preview home-realm discovery: enter an email to see which organization claims its domain and which SSO connections it would route to."
+      >
+        <form className="flex flex-wrap items-end gap-3" action="/organizations">
+          <TextField
+            name="test_email"
+            label="Email"
+            placeholder="jane@acme.com"
+            mono
+          />
+          <button
+            type="submit"
+            className="h-10 rounded bg-accent px-4 text-sm font-medium text-fg-on-accent hover:bg-accent-emphasis"
+          >
+            Resolve
+          </button>
+        </form>
+        {routing ? (
+          <div className="mt-4 rounded border border-border bg-canvas px-4 py-3 text-sm">
+            {!routing.domain ? (
+              <span className="text-error">
+                &ldquo;{routing.email}&rdquo; is not a valid email address.
+              </span>
+            ) : !routing.orgName ? (
+              <span className="text-fg-muted">
+                No organization claims the domain{" "}
+                <code className="font-mono">{routing.domain}</code>. The user
+                would use the default login.
+              </span>
+            ) : (
+              <div>
+                <span className="text-fg-muted">
+                  <code className="font-mono">{routing.domain}</code> routes to{" "}
+                </span>
+                <Link
+                  href={`/organizations/${routing.orgId}`}
+                  className="font-medium text-accent hover:underline"
+                >
+                  {routing.orgName}
+                </Link>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {routing.connections.length === 0 ? (
+                    <span className="text-fg-subtle">
+                      No enabled SSO connections — falls back to the default login.
+                    </span>
+                  ) : (
+                    routing.connections.map((c) => (
+                      <Badge key={c.name} tone="success">
+                        {c.name}
+                      </Badge>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : null}
+      </Card>
 
       <Card title="All organizations">
         {dbError ? (
