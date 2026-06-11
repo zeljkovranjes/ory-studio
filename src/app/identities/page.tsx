@@ -87,6 +87,14 @@ export default async function IdentitiesPage({
             Filter
           </button>
           <span className="flex-1" />
+          {/* Route handler returning a file download — a real <a download> is correct. */}
+          <a
+            href="/identities/export"
+            download
+            className="flex h-10 items-center rounded border border-border px-4 text-sm font-medium text-fg hover:border-accent hover:text-accent"
+          >
+            Export CSV
+          </a>
           <Link
             href="/identities/new"
             className="flex h-10 items-center rounded bg-accent px-4 text-sm font-medium text-fg-on-accent hover:bg-accent-emphasis"
