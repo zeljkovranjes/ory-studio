@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { EVENT_NAMES, insertEvent } from "@/lib/events";
 import { timingSafeEqual } from "@/lib/constant-time";
+import { sha256Hex } from "@/lib/hash";
 import { classifyIp } from "@/lib/geo";
 import { enabledHttpsStreamUrls } from "@/lib/event-streams";
 import { verifyApiKey } from "@/lib/api-keys";
@@ -9,7 +10,14 @@ import { DEFAULT_TENANT_ID } from "@/lib/tenant";
 /** True if the presented token is the env collector token or a valid studio key. */
 async function collectorAuthorized(provided: string): Promise<boolean> {
   const envToken = process.env.STUDIO_COLLECTOR_TOKEN;
-  if (envToken && timingSafeEqual(provided, envToken)) return true;
+  if (envToken) {
+    // Compare fixed-length digests so timing can't leak the token's length.
+    const [a, b] = await Promise.all([
+      sha256Hex(provided),
+      sha256Hex(envToken),
+    ]);
+    if (timingSafeEqual(a, b)) return true;
+  }
   // Studio-issued API keys (verified by hash lookup).
   return verifyApiKey(provided).catch(() => false);
 }
