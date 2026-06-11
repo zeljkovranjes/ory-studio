@@ -18,10 +18,10 @@ import {
 import { Flash, SaveButton, SelectField, TextField } from "@/components/forms";
 import {
   addMemberAction,
-  addOrgSsoAction,
   removeMemberAction,
   removeOrgSsoAction,
 } from "./actions";
+import { OrgSsoForm } from "./OrgSsoForm";
 
 export const dynamic = "force-dynamic";
 
@@ -178,12 +178,17 @@ export default async function OrganizationDetailPage({
         {ssoConnections.length === 0 ? (
           <EmptyState message="No SSO connections for this organization yet." />
         ) : (
-          <Table headers={["Name", "IdP", "Status", ""]}>
+          <Table headers={["Name", "Protocol", "Endpoint", "Status", ""]}>
             {ssoConnections.map((c) => (
               <tr key={c.id} className="hover:bg-canvas">
                 <td className="px-4 py-3 font-medium">{c.name}</td>
+                <td className="px-4 py-3">
+                  <Badge tone="muted">{c.protocol.toUpperCase()}</Badge>
+                </td>
                 <td className="px-4 py-3 font-mono text-xs text-fg-muted">
-                  {c.idp_metadata_url ?? c.idp_entity_id ?? "—"}
+                  {c.protocol === "oidc"
+                    ? (c.oidc_issuer_url ?? "—")
+                    : (c.idp_metadata_url ?? c.idp_entity_id ?? "—")}
                 </td>
                 <td className="px-4 py-3">
                   <Badge tone={c.enabled ? "success" : "muted"}>
@@ -206,25 +211,7 @@ export default async function OrganizationDetailPage({
             ))}
           </Table>
         )}
-        <form
-          action={addOrgSsoAction}
-          className="mt-4 flex flex-wrap items-end gap-3 border-t border-border pt-4"
-        >
-          <input type="hidden" name="org_id" value={org.id} />
-          <TextField name="name" label="Connection name" placeholder="Acme Okta" />
-          <TextField
-            name="idp_metadata_url"
-            label="IdP metadata URL"
-            placeholder="https://idp.acme.com/metadata"
-            mono
-          />
-          <TextField
-            name="idp_entity_id"
-            label="Entity ID (optional)"
-            mono
-          />
-          <SaveButton label="Add connection" />
-        </form>
+        <OrgSsoForm orgId={org.id} />
       </Card>
 
       <Card
