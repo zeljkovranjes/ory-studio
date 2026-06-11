@@ -18,6 +18,18 @@ function safeNext(next: string | undefined): string {
   return "/identities";
 }
 
+// Hash to a fixed-length digest before the constant-time compare so the
+// comparison time can't leak the admin password's length.
+async function sha256Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(value),
+  );
+  return [...new Uint8Array(digest)]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 export async function loginAction(
   _prev: LoginState,
   formData: FormData,
@@ -28,7 +40,11 @@ export async function loginAction(
   // If no password is configured the studio is open (local dev); just proceed.
   if (password) {
     const given = String(formData.get("password") ?? "");
-    if (!timingSafeEqual(given, password)) {
+    const [givenHash, expectedHash] = await Promise.all([
+      sha256Hex(given),
+      sha256Hex(password),
+    ]);
+    if (!timingSafeEqual(givenHash, expectedHash)) {
       return { error: "Incorrect password." };
     }
   }
