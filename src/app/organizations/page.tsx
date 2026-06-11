@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { listOrganizations } from "@/lib/organizations";
+import {
+  listOrganizations,
+  ORG_NAMESPACE,
+  orgObjectKey,
+} from "@/lib/organizations";
+import { listRelationships } from "@/lib/keto";
 import { currentTenant } from "@/lib/tenant";
 import {
   Badge,
@@ -24,8 +29,18 @@ export default async function OrganizationsPage({
 
   let orgs: Awaited<ReturnType<typeof listOrganizations>> = [];
   let dbError: string | null = null;
+  const counts = new Map<string, number>();
   try {
     orgs = await listOrganizations(tenant.id);
+    await Promise.all(
+      orgs.map(async (org) => {
+        const rel = await listRelationships(tenant, {
+          namespace: ORG_NAMESPACE,
+          object: orgObjectKey(org.id),
+        });
+        counts.set(org.id, rel.items.filter((t) => t.subject_id).length);
+      }),
+    );
   } catch (err) {
     dbError = (err as Error).message;
   }
@@ -44,7 +59,7 @@ export default async function OrganizationsPage({
         ) : orgs.length === 0 ? (
           <EmptyState message="No organizations yet. Create one below." />
         ) : (
-          <Table headers={["Name", "Domains", "Created", ""]}>
+          <Table headers={["Name", "Members", "Domains", "Created", ""]}>
             {orgs.map((org) => (
               <tr key={org.id} className="hover:bg-canvas">
                 <td className="px-4 py-3 font-medium">
@@ -54,6 +69,9 @@ export default async function OrganizationsPage({
                   >
                     {org.name}
                   </Link>
+                </td>
+                <td className="px-4 py-3 text-fg-muted">
+                  {counts.get(org.id) ?? 0}
                 </td>
                 <td className="px-4 py-3">
                   {org.domains.length === 0 ? (
