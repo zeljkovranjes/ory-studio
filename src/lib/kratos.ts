@@ -2,14 +2,29 @@
 
 import type { TenantContext } from "./tenant";
 
+export interface KratosCredential {
+  type: string;
+  identifiers?: string[];
+  /** Secret config is redacted by the admin API unless include_credential is set. */
+  version?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface KratosIdentity {
   id: string;
   schema_id: string;
   state: "active" | "inactive";
+  state_changed_at?: string;
   created_at: string;
   updated_at: string;
   traits: Record<string, unknown>;
   verifiable_addresses?: { value: string; verified: boolean; via: string }[];
+  recovery_addresses?: { value: string; via: string }[];
+  /** Keyed by credential type (password, oidc, totp, webauthn, lookup_secret, code). */
+  credentials?: Record<string, KratosCredential>;
+  metadata_public?: unknown;
+  metadata_admin?: unknown;
 }
 
 export interface KratosSession {
@@ -207,6 +222,20 @@ export async function deleteIdentity(
     tenant,
     "DELETE",
     `/admin/identities/${encodeURIComponent(id)}`,
+  );
+}
+
+/** Activate or deactivate an identity via a JSON Patch on its state. */
+export async function setIdentityState(
+  tenant: TenantContext,
+  id: string,
+  state: "active" | "inactive",
+): Promise<KratosIdentity> {
+  return adminSend<KratosIdentity>(
+    tenant,
+    "PATCH",
+    `/admin/identities/${encodeURIComponent(id)}`,
+    [{ op: "replace", path: "/state", value: state }],
   );
 }
 
