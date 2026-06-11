@@ -24,6 +24,7 @@ import {
   revokeSessionsAction,
   setIdentityStateAction,
 } from "./actions";
+import { revokeSessionAction } from "@/app/sessions/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -204,7 +205,7 @@ export default async function IdentityDetailPage({
         {sessions.length === 0 ? (
           <EmptyState message="No sessions." />
         ) : (
-          <Table headers={["Active", "AAL", "Authenticated", "Expires"]}>
+          <Table headers={["Active", "AAL", "Authenticated", "Expires", ""]}>
             {sessions.map((session) => (
               <tr key={session.id}>
                 <td className="px-3 py-2">
@@ -220,6 +221,24 @@ export default async function IdentityDetailPage({
                 </td>
                 <td className="px-3 py-2 text-fg-muted">
                   {new Date(session.expires_at).toLocaleString()}
+                </td>
+                <td className="px-3 py-2 text-right">
+                  {session.active ? (
+                    <form action={revokeSessionAction}>
+                      <input type="hidden" name="session_id" value={session.id} />
+                      <input
+                        type="hidden"
+                        name="redirect_to"
+                        value={`/identities/${identity.id}`}
+                      />
+                      <button
+                        type="submit"
+                        className="rounded border border-border bg-surface px-2.5 py-1 text-xs font-medium text-fg hover:bg-bg-subtle"
+                      >
+                        Revoke
+                      </button>
+                    </form>
+                  ) : null}
                 </td>
               </tr>
             ))}
