@@ -240,6 +240,21 @@ export async function updateIdentityTraits(
   );
 }
 
+/** Replace an identity's admin or public metadata via a JSON Patch. */
+export async function updateIdentityMetadata(
+  tenant: TenantContext,
+  id: string,
+  field: "metadata_admin" | "metadata_public",
+  value: unknown,
+): Promise<KratosIdentity> {
+  return adminSend<KratosIdentity>(
+    tenant,
+    "PATCH",
+    `/admin/identities/${encodeURIComponent(id)}`,
+    [{ op: "replace", path: `/${field}`, value }],
+  );
+}
+
 /** Activate or deactivate an identity via a JSON Patch on its state. */
 export async function setIdentityState(
   tenant: TenantContext,
