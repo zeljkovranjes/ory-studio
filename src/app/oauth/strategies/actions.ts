@@ -1,9 +1,12 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveHydraPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
 export async function saveStrategies(formData: FormData): Promise<void> {
+  await requireSession();
   const scope = String(formData.get("scope") ?? "wildcard");
   const accessToken = String(formData.get("access_token") ?? "opaque");
   const jwtScopeClaim = String(formData.get("jwt_scope_claim") ?? "list");

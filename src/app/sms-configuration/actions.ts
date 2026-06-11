@@ -1,9 +1,12 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveKratosPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
 export async function saveSmsConfig(formData: FormData): Promise<void> {
+  await requireSession();
   const url = String(formData.get("url") ?? "").trim();
   if (url && !/^https?:\/\//.test(url)) {
     flashRedirect("/sms-configuration", {

@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import {
   createOrganization,
   deleteOrganization,
@@ -11,6 +13,7 @@ import { flashRedirect } from "@/lib/flash";
 const PAGE = "/organizations";
 
 export async function createOrgAction(formData: FormData): Promise<void> {
+  await requireSession();
   const tenant = await currentTenant();
   try {
     await createOrganization(tenant.id, {
@@ -24,6 +27,7 @@ export async function createOrgAction(formData: FormData): Promise<void> {
 }
 
 export async function deleteOrgAction(formData: FormData): Promise<void> {
+  await requireSession();
   const tenant = await currentTenant();
   try {
     await deleteOrganization(tenant.id, String(formData.get("id") ?? ""));

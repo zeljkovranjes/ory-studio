@@ -1,9 +1,12 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveKratosPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
 export async function saveEmailConfig(formData: FormData): Promise<void> {
+  await requireSession();
   const connectionUri = String(formData.get("connection_uri") ?? "").trim();
   if (
     connectionUri &&

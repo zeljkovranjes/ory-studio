@@ -1,5 +1,7 @@
 ﻿"use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveKratosPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 import { readKratosRaw } from "@/lib/kratos-config";
@@ -10,6 +12,7 @@ import {
 } from "@/lib/kratos-social";
 
 export async function saveOidcGeneral(formData: FormData): Promise<void> {
+  await requireSession();
   const baseRedirectUri = String(formData.get("base_redirect_uri") ?? "").trim();
   if (baseRedirectUri && !/^https?:\/\//.test(baseRedirectUri)) {
     flashRedirect("/social-signin", {
@@ -31,6 +34,7 @@ export async function saveOidcGeneral(formData: FormData): Promise<void> {
 }
 
 export async function addOidcProvider(formData: FormData): Promise<void> {
+  await requireSession();
   const config = await readKratosRaw();
   if ("error" in config) {
     flashRedirect("/social-signin", { ok: false, error: String(config.error) });
@@ -58,6 +62,7 @@ export async function addOidcProvider(formData: FormData): Promise<void> {
 }
 
 export async function deleteOidcProvider(formData: FormData): Promise<void> {
+  await requireSession();
   const id = String(formData.get("id") ?? "");
   const config = await readKratosRaw();
   if ("error" in config) {

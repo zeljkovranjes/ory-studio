@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { revalidatePath } from "next/cache";
 import { createApiKey, revokeApiKey } from "@/lib/api-keys";
 import { currentTenant } from "@/lib/tenant";
@@ -18,6 +20,7 @@ export async function createKeyAction(
   _prev: CreateKeyState,
   formData: FormData,
 ): Promise<CreateKeyState> {
+  await requireSession();
   const tenant = await currentTenant();
   try {
     const { token, prefix } = await createApiKey(
@@ -32,6 +35,7 @@ export async function createKeyAction(
 }
 
 export async function revokeKeyAction(formData: FormData): Promise<void> {
+  await requireSession();
   const tenant = await currentTenant();
   try {
     await revokeApiKey(tenant.id, String(formData.get("id") ?? ""));

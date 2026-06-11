@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createTenant, deleteTenant } from "@/lib/tenants";
@@ -9,6 +11,7 @@ import { flashRedirect } from "@/lib/flash";
 const PAGE = "/settings/tenants";
 
 export async function createTenantAction(formData: FormData): Promise<void> {
+  await requireSession();
   try {
     await createTenant({
       slug: String(formData.get("slug") ?? "").trim(),
@@ -34,6 +37,7 @@ export async function createTenantAction(formData: FormData): Promise<void> {
 }
 
 export async function deleteTenantAction(formData: FormData): Promise<void> {
+  await requireSession();
   try {
     await deleteTenant(String(formData.get("slug") ?? ""));
   } catch (err) {
@@ -44,6 +48,7 @@ export async function deleteTenantAction(formData: FormData): Promise<void> {
 
 /** Switch the active tenant (sets the selector cookie) and reload. */
 export async function switchTenantAction(formData: FormData): Promise<void> {
+  await requireSession();
   const slug = String(formData.get("slug") ?? "");
   const store = await cookies();
   store.set(TENANT_COOKIE, slug, {

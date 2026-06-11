@@ -1,9 +1,12 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveKratosPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
 export async function saveDomain(formData: FormData): Promise<void> {
+  await requireSession();
   const baseUrl = String(formData.get("base_url") ?? "").trim();
   if (baseUrl && !/^https?:\/\//.test(baseUrl)) {
     flashRedirect("/custom-domains", {

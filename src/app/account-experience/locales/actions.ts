@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import {
   deleteLocale,
   parseMessages,
@@ -11,6 +13,7 @@ import { flashRedirect } from "@/lib/flash";
 const PAGE = "/account-experience/locales";
 
 export async function saveLocaleAction(formData: FormData): Promise<void> {
+  await requireSession();
   const tenant = await currentTenant();
   const locale = String(formData.get("locale") ?? "").trim();
   try {
@@ -23,6 +26,7 @@ export async function saveLocaleAction(formData: FormData): Promise<void> {
 }
 
 export async function deleteLocaleAction(formData: FormData): Promise<void> {
+  await requireSession();
   const tenant = await currentTenant();
   try {
     await deleteLocale(tenant.id, String(formData.get("locale") ?? ""));

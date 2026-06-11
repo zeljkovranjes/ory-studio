@@ -1,9 +1,12 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveKratosPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
 export async function saveGeneralMfa(formData: FormData): Promise<void> {
+  await requireSession();
   const result = await saveKratosPatches([
     {
       path: ["session", "whoami", "required_aal"],
@@ -19,6 +22,7 @@ export async function saveGeneralMfa(formData: FormData): Promise<void> {
 }
 
 export async function saveCodeMfa(formData: FormData): Promise<void> {
+  await requireSession();
   const result = await saveKratosPatches([
     {
       path: ["selfservice", "methods", "code", "mfa_enabled"],
@@ -29,6 +33,7 @@ export async function saveCodeMfa(formData: FormData): Promise<void> {
 }
 
 export async function saveTotp(formData: FormData): Promise<void> {
+  await requireSession();
   const result = await saveKratosPatches([
     {
       path: ["selfservice", "methods", "totp", "enabled"],
@@ -43,6 +48,7 @@ export async function saveTotp(formData: FormData): Promise<void> {
 }
 
 export async function saveWebauthnMfa(formData: FormData): Promise<void> {
+  await requireSession();
   const result = await saveKratosPatches([
     {
       path: ["selfservice", "methods", "webauthn", "enabled"],
@@ -61,6 +67,7 @@ export async function saveWebauthnMfa(formData: FormData): Promise<void> {
 }
 
 export async function saveLookupSecrets(formData: FormData): Promise<void> {
+  await requireSession();
   const result = await saveKratosPatches([
     {
       path: ["selfservice", "methods", "lookup_secret", "enabled"],

@@ -1,9 +1,12 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveKratosPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
 export async function saveRedirects(formData: FormData): Promise<void> {
+  await requireSession();
   const defaultUrl = String(formData.get("default_url") ?? "").trim();
   if (defaultUrl && !/^https?:\/\//.test(defaultUrl)) {
     flashRedirect("/browser-redirects", {

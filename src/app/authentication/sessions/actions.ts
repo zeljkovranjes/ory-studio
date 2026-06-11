@@ -1,9 +1,12 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { isValidDuration, saveKratosPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
 export async function saveSessionSettings(formData: FormData): Promise<void> {
+  await requireSession();
   const lifespan = String(formData.get("lifespan") ?? "");
   const privilegedAge = String(formData.get("privileged_age") ?? "");
   for (const [label, value] of [

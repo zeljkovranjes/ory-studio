@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { redirect } from "next/navigation";
 import {
   createRecoveryCode,
@@ -11,6 +13,7 @@ import { flashRedirect } from "@/lib/flash";
 import { currentTenant } from "@/lib/tenant";
 
 export async function deleteIdentityAction(formData: FormData): Promise<void> {
+  await requireSession();
   const id = String(formData.get("id") ?? "");
   try {
     await deleteIdentity(await currentTenant(), id);
@@ -24,6 +27,7 @@ export async function deleteIdentityAction(formData: FormData): Promise<void> {
 }
 
 export async function revokeSessionsAction(formData: FormData): Promise<void> {
+  await requireSession();
   const id = String(formData.get("id") ?? "");
   const page = `/identities/${encodeURIComponent(id)}`;
   try {
@@ -43,6 +47,7 @@ export async function recoveryCodeAction(
   _prev: RecoveryCodeState,
   formData: FormData,
 ): Promise<RecoveryCodeState> {
+  await requireSession();
   try {
     const result = await createRecoveryCode(
       await currentTenant(),

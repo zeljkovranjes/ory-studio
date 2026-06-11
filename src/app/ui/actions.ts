@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveKratosPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
@@ -13,6 +15,7 @@ const FLOWS = [
 ] as const;
 
 export async function saveUiUrls(formData: FormData): Promise<void> {
+  await requireSession();
   const patches = [];
   for (const flow of FLOWS) {
     const value = String(formData.get(flow) ?? "").trim();

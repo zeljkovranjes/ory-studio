@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveTheme, type ThemeTokens } from "@/lib/theme";
 import { currentTenant } from "@/lib/tenant";
 import { flashRedirect } from "@/lib/flash";
@@ -7,6 +9,7 @@ import { flashRedirect } from "@/lib/flash";
 const PAGE = "/account-experience/theming";
 
 export async function saveThemeAction(formData: FormData): Promise<void> {
+  await requireSession();
   const tenant = await currentTenant();
   const tokens: ThemeTokens = {
     accent: String(formData.get("accent") ?? ""),

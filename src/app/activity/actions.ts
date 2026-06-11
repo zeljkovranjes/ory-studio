@@ -1,11 +1,14 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveKratosPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 import { readKratosRaw } from "@/lib/kratos-config";
 import { buildSystemHookPatches } from "@/lib/system-hooks";
 
 export async function enableCapture(): Promise<void> {
+  await requireSession();
   const config = await readKratosRaw();
   if ("error" in config) {
     flashRedirect("/activity", { ok: false, error: String(config.error) });

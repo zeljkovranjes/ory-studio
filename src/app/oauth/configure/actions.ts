@@ -1,11 +1,14 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveHydraPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
 const PAGE = "/oauth/configure";
 
 export async function saveIssuer(formData: FormData): Promise<void> {
+  await requireSession();
   const issuer = String(formData.get("issuer") ?? "").trim();
   if (issuer && !/^https?:\/\//.test(issuer)) {
     flashRedirect(PAGE, {
@@ -20,6 +23,7 @@ export async function saveIssuer(formData: FormData): Promise<void> {
 }
 
 export async function savePkce(formData: FormData): Promise<void> {
+  await requireSession();
   const result = await saveHydraPatches([
     {
       path: ["oauth2", "pkce", "enforced"],
@@ -34,6 +38,7 @@ export async function savePkce(formData: FormData): Promise<void> {
 }
 
 export async function saveClaims(formData: FormData): Promise<void> {
+  await requireSession();
   const allowed = String(formData.get("allowed_claims") ?? "")
     .split(/[\s,]+/)
     .map((claim) => claim.trim())
@@ -52,6 +57,7 @@ export async function saveClaims(formData: FormData): Promise<void> {
 }
 
 export async function saveRefreshGrant(formData: FormData): Promise<void> {
+  await requireSession();
   const grace = String(formData.get("grace_period") ?? "").trim();
   if (grace && !/^(\d+h)?(\d+m)?(\d+s)?$/.test(grace)) {
     flashRedirect(PAGE, {

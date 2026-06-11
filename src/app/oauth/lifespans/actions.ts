@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveHydraPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
@@ -14,6 +16,7 @@ const FIELDS = [
 const DURATION = /^(\d+h)?(\d+m)?(\d+s)?$/;
 
 export async function saveLifespans(formData: FormData): Promise<void> {
+  await requireSession();
   const patches = [];
   for (const field of FIELDS) {
     const value = String(formData.get(field.name) ?? "").trim();

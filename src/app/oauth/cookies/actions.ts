@@ -1,9 +1,12 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveHydraPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
 export async function saveCookies(formData: FormData): Promise<void> {
+  await requireSession();
   const sameSite = String(formData.get("same_site") ?? "Lax");
   const result = await saveHydraPatches([
     {

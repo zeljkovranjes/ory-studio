@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import {
   buildCourierPatches,
   saveEmailTemplate,
@@ -13,6 +15,7 @@ const PAGE = "/email-templates";
 export async function saveEmailTemplateAction(
   formData: FormData,
 ): Promise<void> {
+  await requireSession();
   const tenant = await currentTenant();
   const templateType = String(formData.get("template_type") ?? "");
   const subject = String(formData.get("subject") ?? "");

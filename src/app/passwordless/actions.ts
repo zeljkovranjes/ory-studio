@@ -1,9 +1,12 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveKratosPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
 export async function savePasskeys(formData: FormData): Promise<void> {
+  await requireSession();
   const result = await saveKratosPatches([
     {
       path: ["selfservice", "methods", "passkey", "enabled"],
@@ -18,6 +21,7 @@ export async function savePasskeys(formData: FormData): Promise<void> {
 }
 
 export async function saveOneTimeCode(formData: FormData): Promise<void> {
+  await requireSession();
   const result = await saveKratosPatches([
     {
       path: ["selfservice", "methods", "code", "passwordless_enabled"],
@@ -30,6 +34,7 @@ export async function saveOneTimeCode(formData: FormData): Promise<void> {
 export async function saveWebauthnPasswordless(
   formData: FormData,
 ): Promise<void> {
+  await requireSession();
   const result = await saveKratosPatches([
     {
       path: ["selfservice", "methods", "webauthn", "enabled"],

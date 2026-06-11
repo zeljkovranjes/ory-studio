@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { createRelationship, deleteRelationship } from "@/lib/keto";
 import {
   ORG_NAMESPACE,
@@ -21,6 +23,7 @@ function page(id: string): string {
 const SUBJECT_RE = /^[A-Za-z0-9_:@.\/-]{1,128}$/;
 
 export async function addMemberAction(formData: FormData): Promise<void> {
+  await requireSession();
   const orgId = String(formData.get("org_id") ?? "");
   const subject = String(formData.get("subject_id") ?? "").trim();
   const relation = String(formData.get("relation") ?? "members");
@@ -49,6 +52,7 @@ export async function addMemberAction(formData: FormData): Promise<void> {
 }
 
 export async function removeMemberAction(formData: FormData): Promise<void> {
+  await requireSession();
   const orgId = String(formData.get("org_id") ?? "");
   try {
     await deleteRelationship(await currentTenant(), {
@@ -64,6 +68,7 @@ export async function removeMemberAction(formData: FormData): Promise<void> {
 }
 
 export async function addOrgSsoAction(formData: FormData): Promise<void> {
+  await requireSession();
   const orgId = String(formData.get("org_id") ?? "");
   const tenant = await currentTenant();
   const protocol = (
@@ -87,6 +92,7 @@ export async function addOrgSsoAction(formData: FormData): Promise<void> {
 }
 
 export async function removeOrgSsoAction(formData: FormData): Promise<void> {
+  await requireSession();
   const orgId = String(formData.get("org_id") ?? "");
   try {
     await deleteSamlConnection(

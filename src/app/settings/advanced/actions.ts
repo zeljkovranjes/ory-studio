@@ -1,9 +1,12 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveKratosPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
 export async function saveAdvanced(formData: FormData): Promise<void> {
+  await requireSession();
   const level = String(formData.get("log_level") ?? "info");
   const result = await saveKratosPatches([
     {

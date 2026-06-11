@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { redirect } from "next/navigation";
 import { createIdentity } from "@/lib/kratos";
 import { buildTraits } from "@/lib/identity-traits";
@@ -13,6 +15,7 @@ export async function createIdentityAction(
   _prev: CreateIdentityState,
   formData: FormData,
 ): Promise<CreateIdentityState> {
+  await requireSession();
   const tenant = await currentTenant();
   let identityId: string;
   try {

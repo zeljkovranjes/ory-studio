@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveKratosConfig, type KratosAuthPatch } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
@@ -17,6 +19,7 @@ async function save(patch: KratosAuthPatch): Promise<never> {
 }
 
 export async function saveSignupLogin(formData: FormData): Promise<void> {
+  await requireSession();
   await save({
     registrationEnabled: checkbox(formData, "registration"),
     passwordEnabled: checkbox(formData, "password"),
@@ -28,6 +31,7 @@ export async function saveSignupLogin(formData: FormData): Promise<void> {
 export async function saveRecoveryVerification(
   formData: FormData,
 ): Promise<void> {
+  await requireSession();
   await save({
     recoveryEnabled: checkbox(formData, "recovery"),
     verificationEnabled: checkbox(formData, "verification"),

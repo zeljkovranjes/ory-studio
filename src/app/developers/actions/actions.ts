@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveKratosPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 import { readKratosRaw } from "@/lib/kratos-config";
@@ -40,6 +42,7 @@ export async function createAction(
   _prev: CreateActionState,
   formData: FormData,
 ): Promise<CreateActionState> {
+  await requireSession();
   const config = await readKratosRaw();
   if ("error" in config) {
     return { error: String(config.error) };
@@ -68,6 +71,7 @@ export async function createAction(
 }
 
 export async function deleteAction(formData: FormData): Promise<void> {
+  await requireSession();
   const config = await readKratosRaw();
   if ("error" in config) {
     flashRedirect(PAGE, { ok: false, error: String(config.error) });

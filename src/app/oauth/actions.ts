@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import {
   createOAuth2Client,
   deleteOAuth2Client,
@@ -17,6 +19,7 @@ export async function createClientAction(
   _prev: CreateClientState,
   formData: FormData,
 ): Promise<CreateClientState> {
+  await requireSession();
   const grantTypes = formData.getAll("grant_types").map(String);
   const responseTypes = formData.getAll("response_types").map(String);
   const redirectUris = String(formData.get("redirect_uris") ?? "")
@@ -49,6 +52,7 @@ export async function createClientAction(
 }
 
 export async function deleteClientAction(formData: FormData): Promise<void> {
+  await requireSession();
   try {
     await deleteOAuth2Client(
       await currentTenant(),

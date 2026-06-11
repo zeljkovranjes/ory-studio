@@ -1,9 +1,12 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveKratosPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
 export async function saveRecovery(formData: FormData): Promise<void> {
+  await requireSession();
   const use = String(formData.get("use") ?? "code");
   const result = await saveKratosPatches([
     {

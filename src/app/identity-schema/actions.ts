@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveKratosPatches } from "@/lib/config-engine";
 import { readKratosRaw } from "@/lib/kratos-config";
 import { listIdentitySchemas } from "@/lib/kratos";
@@ -15,6 +17,7 @@ interface SchemaListEntry {
 export async function setDefaultSchemaAction(
   formData: FormData,
 ): Promise<void> {
+  await requireSession();
   const schemaId = String(formData.get("schema_id") ?? "").trim();
 
   // Validate against the schemas Kratos actually serves — never write an id

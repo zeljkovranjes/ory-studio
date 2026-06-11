@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { saveHydraPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
@@ -13,6 +15,7 @@ function list(formData: FormData, name: string): string[] {
 }
 
 export async function saveWebfinger(formData: FormData): Promise<void> {
+  await requireSession();
   const result = await saveHydraPatches([
     {
       path: ["webfinger", "oidc_discovery", "supported_claims"],
@@ -29,6 +32,7 @@ export async function saveWebfinger(formData: FormData): Promise<void> {
 export async function saveSubjectIdentifiers(
   formData: FormData,
 ): Promise<void> {
+  await requireSession();
   const types = formData.getAll("types").map(String);
   const valid = types.filter((type) => ["public", "pairwise"].includes(type));
   if (valid.length === 0) {
@@ -60,6 +64,7 @@ export async function saveSubjectIdentifiers(
 export async function saveDynamicRegistration(
   formData: FormData,
 ): Promise<void> {
+  await requireSession();
   const result = await saveHydraPatches([
     {
       path: ["oidc", "dynamic_client_registration", "enabled"],

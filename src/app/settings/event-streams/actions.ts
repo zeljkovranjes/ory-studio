@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import {
   createEventStream,
   deleteEventStream,
@@ -11,6 +13,7 @@ import { flashRedirect } from "@/lib/flash";
 const PAGE = "/settings/event-streams";
 
 export async function createStreamAction(formData: FormData): Promise<void> {
+  await requireSession();
   const tenant = await currentTenant();
   try {
     await createEventStream(tenant.id, {
@@ -25,6 +28,7 @@ export async function createStreamAction(formData: FormData): Promise<void> {
 }
 
 export async function toggleStreamAction(formData: FormData): Promise<void> {
+  await requireSession();
   const tenant = await currentTenant();
   try {
     await setEventStreamEnabled(
@@ -39,6 +43,7 @@ export async function toggleStreamAction(formData: FormData): Promise<void> {
 }
 
 export async function deleteStreamAction(formData: FormData): Promise<void> {
+  await requireSession();
   const tenant = await currentTenant();
   try {
     await deleteEventStream(tenant.id, String(formData.get("id") ?? ""));

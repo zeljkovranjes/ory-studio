@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import {
   createSamlConnection,
   deleteSamlConnection,
@@ -11,6 +13,7 @@ import { flashRedirect } from "@/lib/flash";
 const PAGE = "/saml";
 
 export async function createSamlAction(formData: FormData): Promise<void> {
+  await requireSession();
   const tenant = await currentTenant();
   try {
     await createSamlConnection(tenant.id, {
@@ -25,6 +28,7 @@ export async function createSamlAction(formData: FormData): Promise<void> {
 }
 
 export async function toggleSamlAction(formData: FormData): Promise<void> {
+  await requireSession();
   const tenant = await currentTenant();
   try {
     await setSamlEnabled(
@@ -39,6 +43,7 @@ export async function toggleSamlAction(formData: FormData): Promise<void> {
 }
 
 export async function deleteSamlAction(formData: FormData): Promise<void> {
+  await requireSession();
   const tenant = await currentTenant();
   try {
     await deleteSamlConnection(tenant.id, String(formData.get("id") ?? ""));

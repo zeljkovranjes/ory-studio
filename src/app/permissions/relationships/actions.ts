@@ -1,5 +1,7 @@
 "use server";
 
+import { requireSession } from "@/lib/require-session";
+
 import { createRelationship, deleteRelationship } from "@/lib/keto";
 import { flashRedirect } from "@/lib/flash";
 import { currentTenant } from "@/lib/tenant";
@@ -9,6 +11,7 @@ const PAGE = "/permissions/relationships";
 const NAME_PATTERN = /^[A-Za-z0-9_:@.\/-]{1,128}$/;
 
 export async function addRelationship(formData: FormData): Promise<void> {
+  await requireSession();
   const namespace = String(formData.get("namespace") ?? "").trim();
   const object = String(formData.get("object") ?? "").trim();
   const relation = String(formData.get("relation") ?? "").trim();
@@ -40,6 +43,7 @@ export async function addRelationship(formData: FormData): Promise<void> {
 }
 
 export async function removeRelationship(formData: FormData): Promise<void> {
+  await requireSession();
   try {
     await deleteRelationship(await currentTenant(), {
       namespace: String(formData.get("namespace") ?? ""),
