@@ -55,6 +55,23 @@ export default async function ThemingPage({
           → UI URLs.
         </p>
       </Card>
+
+      <Card
+        title="Apply to the account experience"
+        description="The saved theme is served as the Ory Elements --ory-theme-* CSS variables. Load this stylesheet in your account-experience UI (or a custom login page) to apply the brand colors live."
+      >
+        <a
+          href="/account-experience/theme.css"
+          target="_blank"
+          rel="noreferrer"
+          className="text-sm text-accent hover:underline"
+        >
+          View theme.css ↗
+        </a>
+        <pre className="mt-3 overflow-x-auto rounded bg-canvas p-3 font-mono text-xs">
+          {`<link rel="stylesheet" href="${process.env.STUDIO_INTERNAL_URL ?? "http://localhost:4480"}/account-experience/theme.css" />`}
+        </pre>
+      </Card>
     </>
   );
 }
