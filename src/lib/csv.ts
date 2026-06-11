@@ -1,18 +1,35 @@
 /** Minimal RFC-4180 CSV serialization. */
 
-function escapeField(value: unknown): string {
-  const s = value == null ? "" : String(value);
+// Leading characters a spreadsheet may interpret as the start of a formula.
+// Neutralizing them prevents CSV/formula injection when an export is opened in
+// Excel/Sheets (e.g. an identifier of `=HYPERLINK(...)`).
+const FORMULA_TRIGGERS = ["=", "+", "-", "@", "\t", "\r"];
+
+function escapeField(value: unknown, neutralizeFormulas: boolean): string {
+  let s = value == null ? "" : String(value);
+  if (neutralizeFormulas && s.length > 0 && FORMULA_TRIGGERS.includes(s[0])) {
+    s = `'${s}`;
+  }
   if (/[",\r\n]/.test(s)) {
     return `"${s.replace(/"/g, '""')}"`;
   }
   return s;
 }
 
-/** Build a CSV document from a header row and data rows. */
-export function toCsv(headers: string[], rows: unknown[][]): string {
-  const lines = [headers.map(escapeField).join(",")];
+/**
+ * Build a CSV document from a header row and data rows. Pass
+ * `neutralizeFormulas: true` when any cell may contain attacker-controlled text
+ * (e.g. user identifiers) so a spreadsheet won't execute it as a formula.
+ */
+export function toCsv(
+  headers: string[],
+  rows: unknown[][],
+  opts: { neutralizeFormulas?: boolean } = {},
+): string {
+  const nf = opts.neutralizeFormulas ?? false;
+  const lines = [headers.map((h) => escapeField(h, nf)).join(",")];
   for (const row of rows) {
-    lines.push(row.map(escapeField).join(","));
+    lines.push(row.map((cell) => escapeField(cell, nf)).join(","));
   }
   // CRLF line endings per the spec; trailing newline for POSIX friendliness.
   return lines.join("\r\n") + "\r\n";
