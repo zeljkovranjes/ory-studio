@@ -7,13 +7,19 @@
 
 import { ensureOnce, getPool } from "./db";
 
+export const SSO_PROTOCOLS = ["saml", "oidc"] as const;
+export type SsoProtocol = (typeof SSO_PROTOCOLS)[number];
+
 export interface SamlConnection {
   id: string;
   tenant_id: string;
   org_id: string | null;
+  protocol: SsoProtocol;
   name: string;
   idp_metadata_url: string | null;
   idp_entity_id: string | null;
+  oidc_issuer_url: string | null;
+  oidc_client_id: string | null;
   enabled: boolean;
   created_at: string;
 }
@@ -30,8 +36,12 @@ async function ensureSchema(): Promise<void> {
         enabled BOOLEAN NOT NULL DEFAULT true,
         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       );
-      -- org scoping added later; additive so existing rows keep working
+      -- additive columns so existing rows keep working
       ALTER TABLE studio_saml_connections ADD COLUMN IF NOT EXISTS org_id TEXT;
+      ALTER TABLE studio_saml_connections ADD COLUMN IF NOT EXISTS protocol TEXT NOT NULL DEFAULT 'saml';
+      ALTER TABLE studio_saml_connections ADD COLUMN IF NOT EXISTS oidc_issuer_url TEXT;
+      ALTER TABLE studio_saml_connections ADD COLUMN IF NOT EXISTS oidc_client_id TEXT;
+      ALTER TABLE studio_saml_connections ADD COLUMN IF NOT EXISTS oidc_client_secret TEXT;
       CREATE INDEX IF NOT EXISTS studio_saml_tenant
         ON studio_saml_connections (tenant_id);
       CREATE INDEX IF NOT EXISTS studio_saml_org
@@ -41,7 +51,7 @@ async function ensureSchema(): Promise<void> {
 }
 
 const SELECT =
-  "id::text, tenant_id, org_id, name, idp_metadata_url, idp_entity_id, enabled, created_at::text";
+  "id::text, tenant_id, org_id, protocol, name, idp_metadata_url, idp_entity_id, oidc_issuer_url, oidc_client_id, enabled, created_at::text";
 
 export async function listSamlConnections(
   tenantId: string,
@@ -68,19 +78,74 @@ export async function listSamlConnectionsForOrg(
   return res.rows;
 }
 
-/** Pure validation for a SAML connection, throwing on the first problem. */
+export interface ConnectionInput {
+  protocol: SsoProtocol;
+  name: string;
+  orgId?: string;
+  // SAML
+  idpMetadataUrl?: string;
+  idpEntityId?: string;
+  // OIDC
+  oidcIssuerUrl?: string;
+  oidcClientId?: string;
+  oidcClientSecret?: string;
+}
+
+/** Pure validation for an SSO connection (SAML or OIDC). Throws on first problem. */
+export function validateConnectionInput(input: ConnectionInput): void {
+  if (!(SSO_PROTOCOLS as readonly string[]).includes(input.protocol)) {
+    throw new Error("Unknown SSO protocol");
+  }
+  if (!input.name.trim()) throw new Error("Connection name is required");
+  if (input.protocol === "saml") {
+    if (input.idpMetadataUrl && !/^https?:\/\/.+/.test(input.idpMetadataUrl)) {
+      throw new Error("IdP metadata URL must be an http(s) URL");
+    }
+    if (!input.idpMetadataUrl && !input.idpEntityId) {
+      throw new Error("Provide an IdP metadata URL or an entity ID");
+    }
+  } else {
+    if (!/^https?:\/\/.+/.test(input.oidcIssuerUrl ?? "")) {
+      throw new Error("OIDC connections require an https issuer URL");
+    }
+    if (!input.oidcClientId?.trim()) {
+      throw new Error("OIDC connections require a client ID");
+    }
+  }
+}
+
+/** Back-compat: SAML-only creation used by the global SAML page. */
 export function validateSamlInput(input: {
   name: string;
   idpMetadataUrl: string;
   idpEntityId: string;
 }): void {
-  if (!input.name.trim()) throw new Error("Connection name is required");
-  if (input.idpMetadataUrl && !/^https?:\/\/.+/.test(input.idpMetadataUrl)) {
-    throw new Error("IdP metadata URL must be an http(s) URL");
-  }
-  if (!input.idpMetadataUrl && !input.idpEntityId) {
-    throw new Error("Provide an IdP metadata URL or an entity ID");
-  }
+  validateConnectionInput({ protocol: "saml", ...input });
+}
+
+export async function createConnection(
+  tenantId: string,
+  input: ConnectionInput,
+): Promise<void> {
+  validateConnectionInput(input);
+  await ensureSchema();
+  await getPool().query(
+    `INSERT INTO studio_saml_connections
+       (tenant_id, org_id, protocol, name, idp_metadata_url, idp_entity_id,
+        oidc_issuer_url, oidc_client_id, oidc_client_secret)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    [
+      tenantId,
+      input.orgId || null,
+      input.protocol,
+      input.name.trim(),
+      input.idpMetadataUrl || null,
+      input.idpEntityId || null,
+      input.oidcIssuerUrl || null,
+      input.oidcClientId || null,
+      input.oidcClientSecret || null,
+    ],
+  );
 }
 
 export async function createSamlConnection(
@@ -92,19 +157,7 @@ export async function createSamlConnection(
     orgId?: string;
   },
 ): Promise<void> {
-  validateSamlInput(input);
-  await ensureSchema();
-  await getPool().query(
-    `INSERT INTO studio_saml_connections (tenant_id, org_id, name, idp_metadata_url, idp_entity_id)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [
-      tenantId,
-      input.orgId || null,
-      input.name.trim(),
-      input.idpMetadataUrl || null,
-      input.idpEntityId || null,
-    ],
-  );
+  return createConnection(tenantId, { protocol: "saml", ...input });
 }
 
 export async function setSamlEnabled(
