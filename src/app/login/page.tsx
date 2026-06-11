@@ -1,3 +1,4 @@
+import { safeNextPath } from "@/lib/safe-next";
 import { LoginForm } from "./LoginForm";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +9,7 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const { next } = await searchParams;
-  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/identities";
+  const safeNext = safeNextPath(next);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4">

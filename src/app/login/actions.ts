@@ -3,6 +3,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { timingSafeEqual } from "@/lib/constant-time";
+import { sha256Hex } from "@/lib/hash";
+import { safeNextPath } from "@/lib/safe-next";
 import {
   SESSION_COOKIE,
   createSessionToken,
@@ -12,30 +14,12 @@ export interface LoginState {
   error?: string;
 }
 
-function safeNext(next: string | undefined): string {
-  // Only allow same-origin absolute paths to prevent open redirects.
-  if (next && next.startsWith("/") && !next.startsWith("//")) return next;
-  return "/identities";
-}
-
-// Hash to a fixed-length digest before the constant-time compare so the
-// comparison time can't leak the admin password's length.
-async function sha256Hex(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(value),
-  );
-  return [...new Uint8Array(digest)]
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 export async function loginAction(
   _prev: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
   const password = process.env.STUDIO_ADMIN_PASSWORD;
-  const next = safeNext(String(formData.get("next") ?? ""));
+  const next = safeNextPath(String(formData.get("next") ?? ""));
 
   // If no password is configured the studio is open (local dev); just proceed.
   if (password) {
