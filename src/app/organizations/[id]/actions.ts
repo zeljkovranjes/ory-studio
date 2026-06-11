@@ -6,7 +6,11 @@ import {
   ORG_RELATIONS,
   orgObjectKey,
 } from "@/lib/organizations";
-import { createSamlConnection, deleteSamlConnection } from "@/lib/saml";
+import {
+  createConnection,
+  deleteSamlConnection,
+  type SsoProtocol,
+} from "@/lib/saml";
 import { currentTenant } from "@/lib/tenant";
 import { flashRedirect } from "@/lib/flash";
 
@@ -62,12 +66,19 @@ export async function removeMemberAction(formData: FormData): Promise<void> {
 export async function addOrgSsoAction(formData: FormData): Promise<void> {
   const orgId = String(formData.get("org_id") ?? "");
   const tenant = await currentTenant();
+  const protocol = (
+    String(formData.get("protocol") ?? "saml") === "oidc" ? "oidc" : "saml"
+  ) as SsoProtocol;
   try {
-    await createSamlConnection(tenant.id, {
+    await createConnection(tenant.id, {
+      protocol,
+      orgId,
       name: String(formData.get("name") ?? "").trim(),
       idpMetadataUrl: String(formData.get("idp_metadata_url") ?? "").trim(),
       idpEntityId: String(formData.get("idp_entity_id") ?? "").trim(),
-      orgId,
+      oidcIssuerUrl: String(formData.get("oidc_issuer_url") ?? "").trim(),
+      oidcClientId: String(formData.get("oidc_client_id") ?? "").trim(),
+      oidcClientSecret: String(formData.get("oidc_client_secret") ?? ""),
     });
   } catch (err) {
     flashRedirect(page(orgId), { ok: false, error: (err as Error).message });
