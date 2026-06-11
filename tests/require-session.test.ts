@@ -17,14 +17,23 @@ import { createSessionToken, SESSION_COOKIE } from "@/lib/session";
 describe("requireSession", () => {
   beforeEach(() => {
     process.env.STUDIO_SESSION_SECRET = "test-secret-for-require-session";
+    // A configured admin password means the guard is active (closed mode).
+    process.env.STUDIO_ADMIN_PASSWORD = "admin-pw";
     cookieValue = undefined;
   });
   afterEach(() => {
     delete process.env.STUDIO_SESSION_SECRET;
+    delete process.env.STUDIO_ADMIN_PASSWORD;
   });
 
   it("uses the studio_session cookie name", () => {
     expect(SESSION_COOKIE).toBe("studio_session");
+  });
+
+  it("is open (no session required) when no admin password is configured", async () => {
+    delete process.env.STUDIO_ADMIN_PASSWORD;
+    cookieValue = undefined;
+    await expect(requireSession()).resolves.toBeUndefined();
   });
 
   it("throws UnauthorizedError when no session cookie is present", async () => {
