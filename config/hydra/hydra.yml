@@ -1,0 +1,40 @@
+# Hydra configuration — owned by the ory-studio config engine.
+version: v2.3.0
+
+dsn: memory # overridden by DSN env var in docker-compose
+
+serve:
+  cookies:
+    same_site_mode: Lax
+
+urls:
+  self:
+    issuer: http://localhost:4444
+  consent: http://localhost:4455/consent
+  login: http://localhost:4455/login
+  logout: http://localhost:4455/logout
+  error: http://localhost:4455/error
+  post_logout_redirect: http://localhost:4455/login
+
+oauth2:
+  pkce:
+    enforced_for_public_clients: true
+
+strategies:
+  access_token: opaque
+  scope: wildcard
+
+# Dev-only secret — production deployments must override via SECRETS_SYSTEM env var.
+secrets:
+  system:
+    - dev-only-insecure-system-secret
+
+oidc:
+  subject_identifiers:
+    supported_types:
+      - public
+
+log:
+  level: info
+  format: json
+  leak_sensitive_values: false
