@@ -6,7 +6,9 @@ import { redirect } from "next/navigation";
 import {
   createRecoveryCode,
   deleteIdentity,
+  getIdentity,
   revokeIdentitySessions,
+  setAddressVerified,
   setIdentityState,
   updateIdentityMetadata,
   updateIdentityTraits,
@@ -14,6 +16,7 @@ import {
 } from "@/lib/kratos";
 import { parseTraitsObject } from "@/lib/identity-traits";
 import { parseJsonValue } from "@/lib/json-value";
+import { parseAddressIndex } from "@/lib/verifiable-address";
 import { flashRedirect } from "@/lib/flash";
 import { currentTenant } from "@/lib/tenant";
 
@@ -86,6 +89,29 @@ export async function updateTraitsAction(
     return { error: (err as Error).message };
   }
   flashRedirect(`/identities/${encodeURIComponent(id)}`, { ok: true });
+}
+
+export async function setAddressVerifiedAction(
+  formData: FormData,
+): Promise<void> {
+  await requireSession();
+  const id = String(formData.get("id") ?? "");
+  const verified = formData.get("verified") === "true";
+  const page = `/identities/${encodeURIComponent(id)}`;
+  const tenant = await currentTenant();
+  try {
+    // Bound the index against the identity's actual address count so it can
+    // never smuggle extra segments into the JSON Patch path.
+    const identity = await getIdentity(tenant, id);
+    const index = parseAddressIndex(
+      String(formData.get("index") ?? ""),
+      identity.verifiable_addresses?.length ?? 0,
+    );
+    await setAddressVerified(tenant, id, index, verified);
+  } catch (err) {
+    flashRedirect(page, { ok: false, error: (err as Error).message });
+  }
+  flashRedirect(page, { ok: true });
 }
 
 export interface EditMetadataState {
