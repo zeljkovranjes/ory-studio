@@ -21,6 +21,23 @@ describe("toCsv", () => {
   it("renders null/undefined as empty fields", () => {
     expect(toCsv(["x"], [[null], [undefined]])).toBe("x\r\n\r\n\r\n");
   });
+
+  it("does not alter formula-like cells by default", () => {
+    expect(toCsv(["x"], [["=1+1"]])).toBe("x\r\n=1+1\r\n");
+  });
+
+  it("neutralizes formula injection when requested", () => {
+    const csv = toCsv(
+      ["id"],
+      [["=HYPERLINK(0)"], ["+1"], ["-2"], ["@x"], ["safe"]],
+      { neutralizeFormulas: true },
+    );
+    expect(csv).toContain("'=HYPERLINK(0)");
+    expect(csv).toContain("'+1");
+    expect(csv).toContain("'-2");
+    expect(csv).toContain("'@x");
+    expect(csv).toContain("\r\nsafe\r\n");
+  });
 });
 
 describe("parseCsv", () => {
