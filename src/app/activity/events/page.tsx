@@ -74,6 +74,18 @@ export default async function EventsPage({
           >
             Filter
           </button>
+          <span className="flex-1" />
+          {/* Route handler returning a file download — a real <a download> is correct. */}
+          <a
+            href={`/activity/events/export?${new URLSearchParams({
+              ...(eventName ? { event_name: eventName } : {}),
+              time_window: window,
+            })}`}
+            download
+            className="flex h-8 items-center rounded border border-border px-3 text-sm font-medium text-fg hover:border-accent hover:text-accent"
+          >
+            Export CSV
+          </a>
         </form>
 
         {dbError ? (
@@ -83,7 +95,9 @@ export default async function EventsPage({
         ) : events.length === 0 ? (
           <EmptyState message="No events in this window." />
         ) : (
-          <Table headers={["Event", "Identity", "Method", "IP", "Timestamp"]}>
+          <Table
+            headers={["Event", "Identity", "Method", "IP", "Country", "Timestamp"]}
+          >
             {events.map((event) => (
               <tr key={event.id} className="hover:bg-canvas">
                 <td className="px-3 py-2">
@@ -97,6 +111,9 @@ export default async function EventsPage({
                 </td>
                 <td className="px-3 py-2 font-mono text-xs text-fg-muted">
                   {event.ip ?? "—"}
+                </td>
+                <td className="px-3 py-2 text-fg-muted">
+                  {event.geo_country ?? "—"}
                 </td>
                 <td className="px-3 py-2 text-fg-muted">
                   {new Date(event.ts).toLocaleString()}
