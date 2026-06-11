@@ -87,6 +87,12 @@ export default async function IdentitiesPage({
             Filter
           </button>
           <span className="flex-1" />
+          <Link
+            href="/identities/import"
+            className="flex h-10 items-center rounded border border-border px-4 text-sm font-medium text-fg hover:border-accent hover:text-accent"
+          >
+            Import
+          </Link>
           {/* Route handler returning a file download — a real <a download> is correct. */}
           <a
             href="/identities/export"
