@@ -23,6 +23,7 @@ import { MetadataEditor } from "./MetadataEditor";
 import {
   deleteIdentityAction,
   revokeSessionsAction,
+  setAddressVerifiedAction,
   setIdentityStateAction,
 } from "./actions";
 import { revokeSessionAction } from "@/app/sessions/actions";
@@ -145,8 +146,8 @@ export default async function IdentityDetailPage({
 
       <Card title="Addresses">
         {identity.verifiable_addresses?.length ? (
-          <Table headers={["Address", "Via", "Verified"]}>
-            {identity.verifiable_addresses.map((address) => (
+          <Table headers={["Address", "Via", "Verified", ""]}>
+            {identity.verifiable_addresses.map((address, index) => (
               <tr key={address.value}>
                 <td className="px-3 py-2 font-medium">{address.value}</td>
                 <td className="px-3 py-2 text-fg-muted">{address.via}</td>
@@ -154,6 +155,23 @@ export default async function IdentityDetailPage({
                   <Badge tone={address.verified ? "success" : "muted"}>
                     {address.verified ? "verified" : "unverified"}
                   </Badge>
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <form action={setAddressVerifiedAction}>
+                    <input type="hidden" name="id" value={identity.id} />
+                    <input type="hidden" name="index" value={index} />
+                    <input
+                      type="hidden"
+                      name="verified"
+                      value={address.verified ? "false" : "true"}
+                    />
+                    <button
+                      type="submit"
+                      className="rounded border border-border bg-surface px-2.5 py-1 text-xs font-medium text-fg hover:bg-bg-subtle"
+                    >
+                      {address.verified ? "Mark unverified" : "Mark verified"}
+                    </button>
+                  </form>
                 </td>
               </tr>
             ))}
