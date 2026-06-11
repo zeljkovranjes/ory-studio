@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { listOrganizations } from "@/lib/organizations";
 import { currentTenant } from "@/lib/tenant";
 import {
@@ -46,7 +47,14 @@ export default async function OrganizationsPage({
           <Table headers={["Name", "Domains", "Created", ""]}>
             {orgs.map((org) => (
               <tr key={org.id} className="hover:bg-canvas">
-                <td className="px-4 py-3 font-medium">{org.name}</td>
+                <td className="px-4 py-3 font-medium">
+                  <Link
+                    href={`/organizations/${org.id}`}
+                    className="hover:text-accent hover:underline"
+                  >
+                    {org.name}
+                  </Link>
+                </td>
                 <td className="px-4 py-3">
                   {org.domains.length === 0 ? (
                     <span className="text-fg-subtle">—</span>
