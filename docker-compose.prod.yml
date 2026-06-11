@@ -1,0 +1,50 @@
+# Production overlay for ory-studio.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Adds a TLS-terminating Caddy reverse proxy, marks the session cookie Secure,
+# and switches restart policies to always. Secrets must come from a real .env
+# (see .env.production.example) — never commit them.
+
+services:
+  caddy:
+    image: caddy:2
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      STUDIO_DOMAIN: ${STUDIO_DOMAIN}
+      AUTH_DOMAIN: ${AUTH_DOMAIN}
+      KRATOS_PUBLIC_DOMAIN: ${KRATOS_PUBLIC_DOMAIN}
+      HYDRA_PUBLIC_DOMAIN: ${HYDRA_PUBLIC_DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - studio
+      - account-experience
+      - kratos
+      - hydra
+
+  studio:
+    restart: always
+    environment:
+      STUDIO_SECURE_COOKIES: "true"
+    # The proxy reaches the studio over the internal network; no host port needed.
+    ports: !reset []
+
+  postgres:
+    restart: always
+  kratos:
+    restart: always
+  hydra:
+    restart: always
+  keto:
+    restart: always
+  account-experience:
+    restart: always
+
+volumes:
+  caddy-data:
+  caddy-config:
