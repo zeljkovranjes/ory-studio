@@ -1,0 +1,12 @@
+# Normalize to LF everywhere — files are mounted into Linux containers and
+# CRLF breaks shell scripts and service configs. Windows tooling handles LF fine.
+* text=auto eol=lf
+
+# Shell scripts must always be LF
+*.sh text eol=lf
+
+# Binary assets
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary
