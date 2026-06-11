@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildTraits } from "@/lib/identity-traits";
+import { buildTraits, parseTraitsObject } from "@/lib/identity-traits";
 
 describe("buildTraits", () => {
   it("builds traits from simple fields", () => {
@@ -32,5 +32,24 @@ describe("buildTraits", () => {
     expect(() => buildTraits({ email: "", rawTraits: "[1,2]" })).toThrow(
       /JSON object/,
     );
+  });
+});
+
+describe("parseTraitsObject", () => {
+  it("parses a JSON object", () => {
+    expect(parseTraitsObject('{"email":"a@b.co","name":{"first":"Ada"}}')).toEqual(
+      { email: "a@b.co", name: { first: "Ada" } },
+    );
+  });
+
+  it("rejects malformed JSON", () => {
+    expect(() => parseTraitsObject("{nope")).toThrow(/valid JSON/);
+  });
+
+  it("rejects non-object JSON (array, null, scalar)", () => {
+    expect(() => parseTraitsObject("[1,2]")).toThrow(/JSON object/);
+    expect(() => parseTraitsObject("null")).toThrow(/JSON object/);
+    expect(() => parseTraitsObject('"hi"')).toThrow(/JSON object/);
+    expect(() => parseTraitsObject("42")).toThrow(/JSON object/);
   });
 });
