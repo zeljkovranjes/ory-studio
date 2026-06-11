@@ -7,6 +7,7 @@ import {
   createRecoveryCode,
   deleteIdentity,
   revokeIdentitySessions,
+  setIdentityState,
   type RecoveryCodeResult,
 } from "@/lib/kratos";
 import { flashRedirect } from "@/lib/flash";
@@ -36,6 +37,27 @@ export async function revokeSessionsAction(formData: FormData): Promise<void> {
     flashRedirect(page, { ok: false, error: (err as Error).message });
   }
   flashRedirect(page, { ok: true });
+}
+
+export async function setIdentityStateAction(
+  formData: FormData,
+): Promise<void> {
+  await requireSession();
+  const id = String(formData.get("id") ?? "");
+  const state = formData.get("state") === "inactive" ? "inactive" : "active";
+  const page = `/identities/${encodeURIComponent(id)}`;
+  try {
+    await setIdentityState(await currentTenant(), id, state);
+  } catch (err) {
+    flashRedirect(page, { ok: false, error: (err as Error).message });
+  }
+  flashRedirect(page, {
+    ok: true,
+    warning:
+      state === "inactive"
+        ? "Identity deactivated — the user can no longer sign in."
+        : undefined,
+  });
 }
 
 export interface RecoveryCodeState {
