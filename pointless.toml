@@ -1,0 +1,38 @@
+[repo]
+name    = "ory-studio"
+type    = "app"
+stack   = "ts-node"
+version = "0.1.0"
+
+[commands]
+build  = "pnpm build"
+test   = "pnpm test"
+dev    = "pnpm dev"
+lint   = "pnpm lint && pnpm typecheck"
+deploy = "docker compose build studio"
+# Extra verbs (run via `pointless run <verb>`)
+up     = "docker compose up -d"
+down   = "docker compose down"
+
+[env]
+required = [
+  "ORY_KRATOS_ADMIN_URL",
+  "ORY_KRATOS_PUBLIC_URL",
+]
+optional = [
+  "TENANCY_MODE",
+  "STUDIO_ADMIN_USER",
+  "STUDIO_ADMIN_PASSWORD",
+  "ORY_HYDRA_ADMIN_URL",
+  "ORY_KETO_READ_URL",
+  "ORY_KETO_WRITE_URL",
+  "KRATOS_CONFIG_PATH",
+  "HYDRA_CONFIG_PATH",
+  "KETO_NAMESPACES_PATH",
+  "DATABASE_URL",
+  "STUDIO_COLLECTOR_TOKEN",
+  "STUDIO_INTERNAL_URL",
+]
+
+[deploy]
+target = "none"
