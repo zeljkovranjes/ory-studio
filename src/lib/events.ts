@@ -13,7 +13,33 @@ export interface StudioEvent {
   identity_id: string | null;
   ip: string | null;
   user_agent: string | null;
+  geo_country: string | null;
   payload: unknown;
+}
+
+/** Column headers for the events CSV export. */
+export const EVENT_CSV_HEADERS = [
+  "timestamp",
+  "event",
+  "identity_id",
+  "method",
+  "ip",
+  "country",
+  "user_agent",
+] as const;
+
+/** Map an event to a CSV row matching EVENT_CSV_HEADERS. */
+export function eventToCsvRow(event: StudioEvent): (string | null)[] {
+  const method = (event.payload as { method?: string } | null)?.method ?? null;
+  return [
+    event.ts,
+    event.event_name,
+    event.identity_id,
+    method,
+    event.ip,
+    event.geo_country,
+    event.user_agent,
+  ];
 }
 
 export const EVENT_NAMES = [
@@ -211,7 +237,7 @@ export async function listEvents(opts: {
   }
   params.push(opts.limit ?? 100);
   const result = await pool().query<StudioEvent>(
-    `SELECT id::text, ts::text, service, event_name, identity_id, ip, user_agent, payload
+    `SELECT id::text, ts::text, service, event_name, identity_id, ip, user_agent, geo_country, payload
      FROM studio_events
      WHERE ts > now() - $1::interval ${filter}
      ORDER BY ts DESC LIMIT $${params.length}`,
