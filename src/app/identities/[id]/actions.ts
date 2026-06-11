@@ -8,10 +8,12 @@ import {
   deleteIdentity,
   revokeIdentitySessions,
   setIdentityState,
+  updateIdentityMetadata,
   updateIdentityTraits,
   type RecoveryCodeResult,
 } from "@/lib/kratos";
 import { parseTraitsObject } from "@/lib/identity-traits";
+import { parseJsonValue } from "@/lib/json-value";
 import { flashRedirect } from "@/lib/flash";
 import { currentTenant } from "@/lib/tenant";
 
@@ -80,6 +82,34 @@ export async function updateTraitsAction(
   }
   try {
     await updateIdentityTraits(await currentTenant(), id, traits);
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+  flashRedirect(`/identities/${encodeURIComponent(id)}`, { ok: true });
+}
+
+export interface EditMetadataState {
+  error?: string;
+}
+
+export async function updateMetadataAction(
+  _prev: EditMetadataState,
+  formData: FormData,
+): Promise<EditMetadataState> {
+  await requireSession();
+  const id = String(formData.get("id") ?? "");
+  const field =
+    formData.get("field") === "metadata_public"
+      ? "metadata_public"
+      : "metadata_admin";
+  let value;
+  try {
+    value = parseJsonValue(String(formData.get("value") ?? ""));
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+  try {
+    await updateIdentityMetadata(await currentTenant(), id, field, value);
   } catch (err) {
     return { error: (err as Error).message };
   }
