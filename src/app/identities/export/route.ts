@@ -35,6 +35,8 @@ export async function GET() {
   const csv = toCsv(
     ["id", "identifier", "schema", "state", "created_at"],
     rows,
+    // identifiers are user-controlled — neutralize spreadsheet formula injection.
+    { neutralizeFormulas: true },
   );
   return new Response(csv, {
     headers: {
