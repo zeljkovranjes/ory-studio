@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  emailDomain,
   parseDomains,
   validateOrganizationInput,
 } from "@/lib/organizations";
@@ -15,6 +16,18 @@ describe("parseDomains", () => {
       "acme.dev",
     ]);
     expect(parseDomains("")).toEqual([]);
+  });
+});
+
+describe("emailDomain", () => {
+  it("extracts the lowercased domain", () => {
+    expect(emailDomain("Jane@Acme.com")).toBe("acme.com");
+    expect(emailDomain("a.b+tag@sub.example.io")).toBe("sub.example.io");
+  });
+  it("returns null for malformed addresses", () => {
+    for (const bad of ["", "no-at", "@acme.com", "jane@", "jane@localhost"]) {
+      expect(emailDomain(bad)).toBeNull();
+    }
   });
 });
 
