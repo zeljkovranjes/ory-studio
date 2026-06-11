@@ -1,7 +1,15 @@
 import { listIdentitySchemas } from "@/lib/kratos";
 import { getPath, readKratosRaw } from "@/lib/kratos-config";
+import { summarizeSchemaTraits } from "@/lib/identity-schema";
 import { currentTenant } from "@/lib/tenant";
-import { Badge, Card, EmptyState, ErrorState, PageHeader } from "@/components/ui";
+import {
+  Badge,
+  Card,
+  EmptyState,
+  ErrorState,
+  PageHeader,
+  Table,
+} from "@/components/ui";
 import { Flash } from "@/components/forms";
 import { setDefaultSchemaAction } from "./actions";
 
@@ -44,6 +52,7 @@ export default async function IdentitySchemaPage({
       ) : (
         schemas.items.map((schema) => {
           const isDefault = schema.id === defaultSchemaId;
+          const fields = summarizeSchemaTraits(schema.schema);
           return (
             <Card key={schema.id} title={schema.id}>
               <div className="mb-3 flex items-center justify-between">
@@ -66,9 +75,58 @@ export default async function IdentitySchemaPage({
                   </form>
                 )}
               </div>
-              <pre className="max-h-96 overflow-auto rounded bg-canvas p-3 font-mono text-xs">
-                {JSON.stringify(schema.schema, null, 2)}
-              </pre>
+
+              {fields.length > 0 ? (
+                <div className="mb-4">
+                  <Table headers={["Field", "Type", "Required", "Roles"]}>
+                    {fields.map((f) => (
+                      <tr key={f.name}>
+                        <td className="px-3 py-2 font-medium">
+                          {f.name}
+                          {f.title ? (
+                            <span className="ml-2 text-xs text-fg-subtle">
+                              {f.title}
+                            </span>
+                          ) : null}
+                        </td>
+                        <td className="px-3 py-2 font-mono text-xs text-fg-muted">
+                          {f.type}
+                        </td>
+                        <td className="px-3 py-2">
+                          {f.required ? (
+                            <Badge tone="muted">required</Badge>
+                          ) : (
+                            <span className="text-fg-subtle">—</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2">
+                          <span className="flex flex-wrap gap-1">
+                            {f.identifier ? (
+                              <Badge tone="success">login</Badge>
+                            ) : null}
+                            {f.recovery ? <Badge tone="muted">recovery</Badge> : null}
+                            {f.verification ? (
+                              <Badge tone="muted">verification</Badge>
+                            ) : null}
+                            {!f.identifier && !f.recovery && !f.verification ? (
+                              <span className="text-fg-subtle">—</span>
+                            ) : null}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </Table>
+                </div>
+              ) : null}
+
+              <details>
+                <summary className="cursor-pointer text-sm text-fg-muted hover:text-fg">
+                  Raw JSON Schema
+                </summary>
+                <pre className="mt-2 max-h-96 overflow-auto rounded bg-canvas p-3 font-mono text-xs">
+                  {JSON.stringify(schema.schema, null, 2)}
+                </pre>
+              </details>
             </Card>
           );
         })
