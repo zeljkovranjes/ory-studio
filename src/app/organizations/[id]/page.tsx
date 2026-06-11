@@ -1,9 +1,12 @@
+import Link from "next/link";
 import { checkPermission, listRelationships } from "@/lib/keto";
+import { getIdentity, identityIdentifier } from "@/lib/kratos";
 import {
   getOrganization,
   ORG_NAMESPACE,
   ORG_RELATIONS,
   orgObjectKey,
+  roleLabel,
 } from "@/lib/organizations";
 import { listSamlConnectionsForOrg } from "@/lib/saml";
 import { currentTenant } from "@/lib/tenant";
@@ -58,9 +61,21 @@ export default async function OrganizationDetailPage({
     }),
     listSamlConnectionsForOrg(tenant.id, org.id).catch(() => []),
   ]);
-  const members = result.items
-    .filter((t) => t.subject_id)
-    .map((t) => ({ subject: t.subject_id as string, relation: t.relation }));
+  // Resolve each member's identity id to a human label (email/username),
+  // falling back to the raw id when it isn't a resolvable identity.
+  const members = await Promise.all(
+    result.items
+      .filter((t) => t.subject_id)
+      .map(async (t) => {
+        const subject = t.subject_id as string;
+        const identity = await getIdentity(tenant, subject).catch(() => null);
+        return {
+          subject,
+          relation: t.relation,
+          label: identity ? identityIdentifier(identity) : null,
+        };
+      }),
+  );
 
   // Authorization check (Keto): does a subject have a given relation/permit?
   const checkRelation = ["members", "admins", "view", "manage"].includes(
@@ -121,13 +136,25 @@ export default async function OrganizationDetailPage({
         ) : members.length === 0 ? (
           <EmptyState message="No members yet. Add one below." />
         ) : (
-          <Table headers={["Subject", "Role", ""]}>
+          <Table headers={["Member", "Role", ""]}>
             {members.map((m) => (
               <tr key={`${m.relation}:${m.subject}`} className="hover:bg-canvas">
-                <td className="px-4 py-3 font-mono text-xs">{m.subject}</td>
+                <td className="px-4 py-3">
+                  <Link
+                    href={`/identities/${m.subject}`}
+                    className="hover:text-accent hover:underline"
+                  >
+                    {m.label ? (
+                      <span className="font-medium">{m.label}</span>
+                    ) : null}
+                    <span className="block font-mono text-xs text-fg-subtle">
+                      {m.subject}
+                    </span>
+                  </Link>
+                </td>
                 <td className="px-4 py-3">
                   <Badge tone={m.relation === "admins" ? "success" : "muted"}>
-                    {m.relation === "admins" ? "admin" : "member"}
+                    {roleLabel(m.relation)}
                   </Badge>
                 </td>
                 <td className="px-4 py-3 text-right">
