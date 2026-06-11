@@ -1,0 +1,124 @@
+# Kratos configuration — owned by the ory-studio config engine.
+# Studio UI "Save" rewrites this file and reloads the kratos container.
+version: v1.3.1
+
+dsn: memory # overridden by DSN env var in docker-compose
+
+serve:
+  public:
+    base_url: http://localhost:4433/
+    cors:
+      enabled: true
+      allowed_origins:
+        - http://localhost:3000
+        - http://localhost:4455
+  admin:
+    base_url: http://kratos:4434/
+
+selfservice:
+  default_browser_return_url: http://localhost:4455/welcome
+  allowed_return_urls:
+    - http://localhost:4455
+    - http://localhost:3000
+
+  methods:
+    password:
+      enabled: true
+    code:
+      enabled: true
+    totp:
+      enabled: true
+      config:
+        issuer: ory-studio
+    lookup_secret:
+      enabled: true
+    webauthn:
+      enabled: false
+    passkey:
+      enabled: false
+
+  flows:
+    error:
+      ui_url: http://localhost:4455/error
+
+    settings:
+      ui_url: http://localhost:4455/settings
+      privileged_session_max_age: 15m
+      required_aal: highest_available
+      after:
+        hooks: []
+
+    recovery:
+      enabled: true
+      ui_url: http://localhost:4455/recovery
+      use: code
+      after:
+        hooks: []
+
+    verification:
+      enabled: true
+      ui_url: http://localhost:4455/verification
+      use: code
+      after:
+        default_browser_return_url: http://localhost:4455/welcome
+        hooks: []
+      before:
+        hooks: []
+
+    logout:
+      after:
+        default_browser_return_url: http://localhost:4455/login
+
+    login:
+      ui_url: http://localhost:4455/login
+      lifespan: 10m
+      after:
+        hooks: []
+
+    registration:
+      enabled: true
+      lifespan: 10m
+      ui_url: http://localhost:4455/registration
+      after:
+        password:
+          hooks:
+            - hook: session
+        hooks: []
+
+session:
+  lifespan: 72h
+  cookie:
+    persistent: true
+    same_site: Lax
+
+log:
+  level: info
+  format: json
+  leak_sensitive_values: false
+
+# Dev-only secrets — production deployments must override via SECRETS_* env vars.
+secrets:
+  cookie:
+    - dev-only-insecure-cookie-secret
+  cipher:
+    - dev-only-insecure-cipher-32chars
+
+ciphers:
+  algorithm: xchacha20-poly1305
+
+hashers:
+  algorithm: bcrypt
+  bcrypt:
+    cost: 8
+
+identity:
+  default_schema_id: default
+  schemas:
+    - id: default
+      url: file:///etc/config/kratos/identity.schema.json
+
+courier:
+  smtp:
+    connection_uri: smtp://mailpit:1025/?disable_starttls=true
+    from_address: no-reply@ory-studio.local
+    from_name: ory-studio
