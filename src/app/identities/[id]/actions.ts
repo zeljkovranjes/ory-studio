@@ -8,8 +8,10 @@ import {
   deleteIdentity,
   revokeIdentitySessions,
   setIdentityState,
+  updateIdentityTraits,
   type RecoveryCodeResult,
 } from "@/lib/kratos";
+import { parseTraitsObject } from "@/lib/identity-traits";
 import { flashRedirect } from "@/lib/flash";
 import { currentTenant } from "@/lib/tenant";
 
@@ -58,6 +60,30 @@ export async function setIdentityStateAction(
         ? "Identity deactivated — the user can no longer sign in."
         : undefined,
   });
+}
+
+export interface EditTraitsState {
+  error?: string;
+}
+
+export async function updateTraitsAction(
+  _prev: EditTraitsState,
+  formData: FormData,
+): Promise<EditTraitsState> {
+  await requireSession();
+  const id = String(formData.get("id") ?? "");
+  let traits;
+  try {
+    traits = parseTraitsObject(String(formData.get("traits") ?? ""));
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+  try {
+    await updateIdentityTraits(await currentTenant(), id, traits);
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+  flashRedirect(`/identities/${encodeURIComponent(id)}`, { ok: true });
 }
 
 export interface RecoveryCodeState {
