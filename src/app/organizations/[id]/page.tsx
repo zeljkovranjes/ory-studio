@@ -1,4 +1,4 @@
-import { listRelationships } from "@/lib/keto";
+import { checkPermission, listRelationships } from "@/lib/keto";
 import {
   getOrganization,
   ORG_NAMESPACE,
@@ -30,10 +30,16 @@ export default async function OrganizationDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ saved?: string; warning?: string; error?: string }>;
+  searchParams: Promise<{
+    saved?: string;
+    warning?: string;
+    error?: string;
+    check_subject?: string;
+    check_relation?: string;
+  }>;
 }) {
   const { id } = await params;
-  const flash = await searchParams;
+  const { check_subject, check_relation, ...flash } = await searchParams;
   const tenant = await currentTenant();
 
   const org = await getOrganization(tenant.id, id).catch(() => null);
@@ -55,6 +61,32 @@ export default async function OrganizationDetailPage({
   const members = result.items
     .filter((t) => t.subject_id)
     .map((t) => ({ subject: t.subject_id as string, relation: t.relation }));
+
+  // Authorization check (Keto): does a subject have a given relation/permit?
+  const checkRelation = ["members", "admins", "view", "manage"].includes(
+    check_relation ?? "",
+  )
+    ? (check_relation as string)
+    : "manage";
+  let checkResult: { subject: string; relation: string; allowed: boolean } | null =
+    null;
+  if (check_subject) {
+    try {
+      const allowed = await checkPermission(tenant, {
+        namespace: ORG_NAMESPACE,
+        object: orgObjectKey(id),
+        relation: checkRelation,
+        subjectId: check_subject,
+      });
+      checkResult = { subject: check_subject, relation: checkRelation, allowed };
+    } catch {
+      checkResult = {
+        subject: check_subject,
+        relation: checkRelation,
+        allowed: false,
+      };
+    }
+  }
 
   return (
     <>
@@ -193,6 +225,50 @@ export default async function OrganizationDetailPage({
           />
           <SaveButton label="Add connection" />
         </form>
+      </Card>
+
+      <Card
+        title="Authorization check"
+        description="Evaluate an access decision against this organization using Keto. 'view' and 'manage' are OPL permits — manage resolves to admins; view to members or admins."
+      >
+        <form className="flex flex-wrap items-end gap-3" action={`/organizations/${org.id}`}>
+          <TextField
+            name="check_subject"
+            label="Subject (identity id)"
+            defaultValue={check_subject}
+            placeholder="identity uuid…"
+            mono
+          />
+          <SelectField
+            name="check_relation"
+            label="Permission"
+            defaultValue={checkRelation}
+            options={[
+              { value: "manage", label: "manage (permit)" },
+              { value: "view", label: "view (permit)" },
+              { value: "admins", label: "admins (relation)" },
+              { value: "members", label: "members (relation)" },
+            ]}
+          />
+          <button
+            type="submit"
+            className="h-10 rounded bg-accent px-4 text-sm font-medium text-fg-on-accent hover:bg-accent-emphasis"
+          >
+            Check
+          </button>
+        </form>
+        {checkResult ? (
+          <div className="mt-4 rounded border border-border bg-canvas px-4 py-3 text-sm">
+            <code className="font-mono">{checkResult.subject}</code>{" "}
+            <span className="text-fg-muted">
+              {checkResult.allowed ? "is allowed to" : "is NOT allowed to"}
+            </span>{" "}
+            <span className="font-medium">{checkResult.relation}</span>{" "}
+            <Badge tone={checkResult.allowed ? "success" : "error"}>
+              {checkResult.allowed ? "allowed" : "denied"}
+            </Badge>
+          </div>
+        ) : null}
       </Card>
     </>
   );
