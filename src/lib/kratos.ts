@@ -225,6 +225,21 @@ export async function deleteIdentity(
   );
 }
 
+/** Replace an identity's traits via a JSON Patch. Kratos still validates the
+ * new traits against the identity's schema and returns 400 on mismatch. */
+export async function updateIdentityTraits(
+  tenant: TenantContext,
+  id: string,
+  traits: Record<string, unknown>,
+): Promise<KratosIdentity> {
+  return adminSend<KratosIdentity>(
+    tenant,
+    "PATCH",
+    `/admin/identities/${encodeURIComponent(id)}`,
+    [{ op: "replace", path: "/traits", value: traits }],
+  );
+}
+
 /** Activate or deactivate an identity via a JSON Patch on its state. */
 export async function setIdentityState(
   tenant: TenantContext,
