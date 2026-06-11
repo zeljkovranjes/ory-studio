@@ -5,6 +5,7 @@ import {
   ORG_RELATIONS,
   orgObjectKey,
 } from "@/lib/organizations";
+import { listSamlConnectionsForOrg } from "@/lib/saml";
 import { currentTenant } from "@/lib/tenant";
 import {
   Badge,
@@ -15,7 +16,12 @@ import {
   Table,
 } from "@/components/ui";
 import { Flash, SaveButton, SelectField, TextField } from "@/components/forms";
-import { addMemberAction, removeMemberAction } from "./actions";
+import {
+  addMemberAction,
+  addOrgSsoAction,
+  removeMemberAction,
+  removeOrgSsoAction,
+} from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -39,10 +45,13 @@ export default async function OrganizationDetailPage({
     );
   }
 
-  const result = await listRelationships(tenant, {
-    namespace: ORG_NAMESPACE,
-    object: orgObjectKey(id),
-  });
+  const [result, ssoConnections] = await Promise.all([
+    listRelationships(tenant, {
+      namespace: ORG_NAMESPACE,
+      object: orgObjectKey(id),
+    }),
+    listSamlConnectionsForOrg(tenant.id, org.id).catch(() => []),
+  ]);
   const members = result.items
     .filter((t) => t.subject_id)
     .map((t) => ({ subject: t.subject_id as string, relation: t.relation }));
@@ -127,6 +136,62 @@ export default async function OrganizationDetailPage({
             }))}
           />
           <SaveButton label="Add member" />
+        </form>
+      </Card>
+
+      <Card
+        title="SSO connections"
+        description="SAML identity providers scoped to this organization. Users in this org's domains are routed to its enabled connections."
+      >
+        {ssoConnections.length === 0 ? (
+          <EmptyState message="No SSO connections for this organization yet." />
+        ) : (
+          <Table headers={["Name", "IdP", "Status", ""]}>
+            {ssoConnections.map((c) => (
+              <tr key={c.id} className="hover:bg-canvas">
+                <td className="px-4 py-3 font-medium">{c.name}</td>
+                <td className="px-4 py-3 font-mono text-xs text-fg-muted">
+                  {c.idp_metadata_url ?? c.idp_entity_id ?? "—"}
+                </td>
+                <td className="px-4 py-3">
+                  <Badge tone={c.enabled ? "success" : "muted"}>
+                    {c.enabled ? "enabled" : "disabled"}
+                  </Badge>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <form action={removeOrgSsoAction}>
+                    <input type="hidden" name="org_id" value={org.id} />
+                    <input type="hidden" name="id" value={c.id} />
+                    <button
+                      type="submit"
+                      className="text-sm text-error hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            ))}
+          </Table>
+        )}
+        <form
+          action={addOrgSsoAction}
+          className="mt-4 flex flex-wrap items-end gap-3 border-t border-border pt-4"
+        >
+          <input type="hidden" name="org_id" value={org.id} />
+          <TextField name="name" label="Connection name" placeholder="Acme Okta" />
+          <TextField
+            name="idp_metadata_url"
+            label="IdP metadata URL"
+            placeholder="https://idp.acme.com/metadata"
+            mono
+          />
+          <TextField
+            name="idp_entity_id"
+            label="Entity ID (optional)"
+            mono
+          />
+          <SaveButton label="Add connection" />
         </form>
       </Card>
     </>
