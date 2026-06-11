@@ -108,3 +108,26 @@ export function parseDomains(raw: string): string[] {
     .map((d) => d.trim().toLowerCase())
     .filter(Boolean);
 }
+
+/** The lowercased domain of an email address, or null when malformed. */
+export function emailDomain(email: string): string | null {
+  const at = email.lastIndexOf("@");
+  if (at <= 0 || at === email.length - 1) return null;
+  const domain = email.slice(at + 1).trim().toLowerCase();
+  return /^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain) ? domain : null;
+}
+
+/** Find the organization that claims a given email domain, if any. */
+export async function findOrganizationByDomain(
+  tenantId: string,
+  domain: string,
+): Promise<Organization | null> {
+  await ensureSchema();
+  const res = await getPool().query<Organization>(
+    `SELECT id::text, tenant_id, name, domains, created_at::text
+     FROM studio_organizations
+     WHERE tenant_id = $1 AND $2 = ANY(domains) LIMIT 1`,
+    [tenantId, domain],
+  );
+  return res.rows[0] ?? null;
+}
