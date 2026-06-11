@@ -1,0 +1,156 @@
+name: ory-studio
+
+x-postgres-env: &postgres-env
+  POSTGRES_USER: ory
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ory-dev-password}
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      <<: *postgres-env
+      # one cluster, one db per service (created by init script)
+      POSTGRES_DB: studio
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./config/postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+    ports:
+      # host port 5433 to avoid clashing with other local postgres instances
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ory"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  kratos-migrate:
+    image: oryd/kratos:v1.3.1
+    environment:
+      DSN: postgres://ory:${POSTGRES_PASSWORD:-ory-dev-password}@postgres:5432/kratos?sslmode=disable
+    command: migrate sql -e --yes
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  kratos:
+    image: oryd/kratos:v1.3.1
+    environment:
+      DSN: postgres://ory:${POSTGRES_PASSWORD:-ory-dev-password}@postgres:5432/kratos?sslmode=disable
+    command: serve --config /etc/config/kratos/kratos.yml --dev --watch-courier
+    volumes:
+      - ./config/kratos:/etc/config/kratos
+    ports:
+      - "4433:4433" # public
+      - "4434:4434" # admin
+    depends_on:
+      kratos-migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  hydra-migrate:
+    image: oryd/hydra:v2.3.0
+    environment:
+      DSN: postgres://ory:${POSTGRES_PASSWORD:-ory-dev-password}@postgres:5432/hydra?sslmode=disable
+    command: migrate sql -e --yes
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  hydra:
+    image: oryd/hydra:v2.3.0
+    environment:
+      DSN: postgres://ory:${POSTGRES_PASSWORD:-ory-dev-password}@postgres:5432/hydra?sslmode=disable
+    command: serve all --config /etc/config/hydra/hydra.yml --dev
+    volumes:
+      - ./config/hydra:/etc/config/hydra
+    ports:
+      - "4444:4444" # public
+      - "4445:4445" # admin
+    depends_on:
+      hydra-migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  keto-migrate:
+    image: oryd/keto:v0.14.0
+    environment:
+      DSN: postgres://ory:${POSTGRES_PASSWORD:-ory-dev-password}@postgres:5432/keto?sslmode=disable
+    command: migrate up -y --config /etc/config/keto/keto.yml
+    volumes:
+      - ./config/keto:/etc/config/keto
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  keto:
+    image: oryd/keto:v0.14.0
+    environment:
+      DSN: postgres://ory:${POSTGRES_PASSWORD:-ory-dev-password}@postgres:5432/keto?sslmode=disable
+    command: serve --config /etc/config/keto/keto.yml
+    volumes:
+      - ./config/keto:/etc/config/keto
+    ports:
+      - "4466:4466" # read
+      - "4467:4467" # write
+    depends_on:
+      keto-migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # Account experience (login/registration/recovery/verification/settings pages)
+  account-experience:
+    image: oryd/kratos-selfservice-ui-node:v1.3.1
+    environment:
+      KRATOS_PUBLIC_URL: http://kratos:4433
+      KRATOS_BROWSER_URL: http://localhost:4433
+      COOKIE_SECRET: ${ACCOUNT_EXPERIENCE_COOKIE_SECRET:-dev-only-cookie-secret-32chars!!}
+      CSRF_COOKIE_NAME: ory_csrf_ui
+      CSRF_COOKIE_SECRET: ${ACCOUNT_EXPERIENCE_CSRF_SECRET:-dev-only-csrf-secret-32-chars!!!}
+      PORT: "4455"
+    ports:
+      - "4455:4455"
+    depends_on:
+      - kratos
+    restart: unless-stopped
+
+  # Dev inbox — Kratos courier delivers here in dev
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      # SMTP stays network-internal (kratos courier uses mailpit:1025);
+      # host web UI on 8026 to avoid clashing with other local mailpits
+      - "8026:8025"
+    restart: unless-stopped
+
+  studio:
+    build: .
+    environment:
+      TENANCY_MODE: ${TENANCY_MODE:-single}
+      STUDIO_ADMIN_USER: ${STUDIO_ADMIN_USER:-admin}
+      STUDIO_ADMIN_PASSWORD: ${STUDIO_ADMIN_PASSWORD:-}
+      ORY_KRATOS_ADMIN_URL: http://kratos:4434
+      ORY_KRATOS_PUBLIC_URL: http://localhost:4433
+      ORY_HYDRA_ADMIN_URL: http://hydra:4445
+      ORY_KETO_READ_URL: http://keto:4466
+      ORY_KETO_WRITE_URL: http://keto:4467
+      KRATOS_CONFIG_PATH: /etc/config/kratos/kratos.yml
+      HYDRA_CONFIG_PATH: /etc/config/hydra/hydra.yml
+      KETO_NAMESPACES_PATH: /etc/config/keto/namespaces.keto.ts
+      STUDIO_COLLECTOR_TOKEN: ${STUDIO_COLLECTOR_TOKEN:-dev-only-collector-token}
+      STUDIO_INTERNAL_URL: http://studio:3000
+      DATABASE_URL: postgres://ory:${POSTGRES_PASSWORD:-ory-dev-password}@postgres:5432/studio
+    volumes:
+      - ./config:/etc/config
+      # config engine: studio reloads service containers after writing config
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "3000:3000"
+    depends_on:
+      - kratos
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
