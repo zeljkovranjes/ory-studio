@@ -280,6 +280,18 @@ export async function revokeIdentitySessions(
   );
 }
 
+/** Deactivate a single session by id (admin DELETE /admin/sessions/{id}). */
+export async function disableSession(
+  tenant: TenantContext,
+  sessionId: string,
+): Promise<void> {
+  await adminSend<void>(
+    tenant,
+    "DELETE",
+    `/admin/sessions/${encodeURIComponent(sessionId)}`,
+  );
+}
+
 export interface RecoveryCodeResult {
   recovery_code?: string;
   recovery_link?: string;
