@@ -5,7 +5,7 @@ import {
   listIdentitySessions,
 } from "@/lib/kratos";
 import { listRelationships } from "@/lib/keto";
-import { getOrganization, ORG_NAMESPACE } from "@/lib/organizations";
+import { getOrganization, ORG_NAMESPACE, roleLabel } from "@/lib/organizations";
 import { summarizeCredentials } from "@/lib/credentials";
 import { currentTenant } from "@/lib/tenant";
 import {
@@ -201,7 +201,7 @@ export default async function IdentityDetailPage({
                 </td>
                 <td className="px-4 py-3">
                   <Badge tone={m.relation === "admins" ? "success" : "muted"}>
-                    {m.relation === "admins" ? "admin" : "member"}
+                    {roleLabel(m.relation)}
                   </Badge>
                 </td>
               </tr>
