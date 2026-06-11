@@ -1,8 +1,11 @@
+import Link from "next/link";
 import {
   getIdentity,
   identityIdentifier,
   listIdentitySessions,
 } from "@/lib/kratos";
+import { listRelationships } from "@/lib/keto";
+import { getOrganization, ORG_NAMESPACE } from "@/lib/organizations";
 import { currentTenant } from "@/lib/tenant";
 import {
   Badge,
@@ -40,6 +43,26 @@ export default async function IdentityDetailPage({
     );
   }
   const sessions = await listIdentitySessions(tenant, id);
+
+  // Organization memberships: Keto relationships in the Organization namespace
+  // where this identity is the subject. Resolve each org's name from the DB.
+  const orgRel = await listRelationships(tenant, {
+    namespace: ORG_NAMESPACE,
+    subjectId: identity.id,
+  });
+  const memberships = (
+    await Promise.all(
+      orgRel.items
+        .filter((t) => t.object?.startsWith("org:"))
+        .map(async (t) => {
+          const orgId = t.object.slice("org:".length);
+          const org = await getOrganization(tenant.id, orgId).catch(() => null);
+          return org
+            ? { id: org.id, name: org.name, relation: t.relation }
+            : null;
+        }),
+    )
+  ).filter((m): m is NonNullable<typeof m> => m !== null);
 
   return (
     <>
@@ -83,6 +106,35 @@ export default async function IdentityDetailPage({
           </Table>
         ) : (
           <EmptyState message="No verifiable addresses." />
+        )}
+      </Card>
+
+      <Card
+        title="Organizations"
+        description="Organizations this identity belongs to, via Keto memberships."
+      >
+        {memberships.length === 0 ? (
+          <EmptyState message="Not a member of any organization." />
+        ) : (
+          <Table headers={["Organization", "Role"]}>
+            {memberships.map((m) => (
+              <tr key={`${m.id}:${m.relation}`} className="hover:bg-canvas">
+                <td className="px-4 py-3 font-medium">
+                  <Link
+                    href={`/organizations/${m.id}`}
+                    className="hover:text-accent hover:underline"
+                  >
+                    {m.name}
+                  </Link>
+                </td>
+                <td className="px-4 py-3">
+                  <Badge tone={m.relation === "admins" ? "success" : "muted"}>
+                    {m.relation === "admins" ? "admin" : "member"}
+                  </Badge>
+                </td>
+              </tr>
+            ))}
+          </Table>
         )}
       </Card>
 
