@@ -30,6 +30,28 @@ async function ensureSchema(): Promise<void> {
   });
 }
 
+/** Keto namespace + relations used for organization membership. */
+export const ORG_NAMESPACE = "Organization";
+export const ORG_RELATIONS = ["members", "admins"] as const;
+
+/** Stable Keto object key for an organization. */
+export function orgObjectKey(id: string): string {
+  return `org:${id}`;
+}
+
+export async function getOrganization(
+  tenantId: string,
+  id: string,
+): Promise<Organization | null> {
+  await ensureSchema();
+  const res = await getPool().query<Organization>(
+    `SELECT id::text, tenant_id, name, domains, created_at::text
+     FROM studio_organizations WHERE tenant_id = $1 AND id = $2::bigint`,
+    [tenantId, id],
+  );
+  return res.rows[0] ?? null;
+}
+
 export async function listOrganizations(
   tenantId: string,
 ): Promise<Organization[]> {
