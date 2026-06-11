@@ -39,6 +39,13 @@ export function orgObjectKey(id: string): string {
   return `org:${id}`;
 }
 
+/** Human label for an organization membership relation. */
+export function roleLabel(relation: string): string {
+  if (relation === "admins") return "admin";
+  if (relation === "members") return "member";
+  return relation;
+}
+
 export async function getOrganization(
   tenantId: string,
   id: string,
