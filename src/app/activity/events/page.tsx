@@ -4,6 +4,7 @@ import {
   Card,
   EmptyState,
   PageHeader,
+  RelativeTime,
   Table,
 } from "@/components/ui";
 
@@ -116,7 +117,7 @@ export default async function EventsPage({
                   {event.geo_country ?? "—"}
                 </td>
                 <td className="px-3 py-2 text-fg-muted">
-                  {new Date(event.ts).toLocaleString()}
+                  <RelativeTime iso={event.ts} />
                 </td>
               </tr>
             ))}
