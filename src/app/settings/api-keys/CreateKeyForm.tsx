@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { CopyField } from "@/components/CopyButton";
 import { createKeyAction, type CreateKeyState } from "./actions";
 
 export function CreateKeyForm() {
@@ -15,9 +16,9 @@ export function CreateKeyForm() {
         <div className="rounded border border-border bg-accent-subtle px-4 py-3 text-sm text-accent-emphasis">
           API key created — copy it now. It is shown only once.
         </div>
-        <pre className="mt-3 overflow-x-auto rounded bg-canvas p-3 font-mono text-xs">
-          {state.token}
-        </pre>
+        <div className="mt-3">
+          <CopyField value={state.token} />
+        </div>
         <p className="mt-2 text-xs text-fg-subtle">
           Reload the page to return to the key list.
         </p>
