@@ -32,12 +32,12 @@ export default async function IdentitiesPage({
     pageToken: page_token,
   });
 
-  let newSignups: number | null = null;
-  try {
-    newSignups = await countEvents("signup", "24h");
-  } catch {
-    newSignups = null;
-  }
+  // Pull the 24h signup and login counts together; either may be null if the
+  // events database isn't reachable, in which case the card shows a dash.
+  const [newSignups, logins] = await Promise.all([
+    countEvents("signup", "24h").catch(() => null),
+    countEvents("login", "24h").catch(() => null),
+  ]);
 
   return (
     <>
@@ -58,7 +58,7 @@ export default async function IdentitiesPage({
         />
         <StatCard
           label="Logins (24h)"
-          value="—"
+          value={logins ?? "—"}
           href="/activity"
         />
       </div>
