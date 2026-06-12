@@ -10,8 +10,20 @@ export interface OAuth2Client {
   response_types?: string[];
   redirect_uris?: string[];
   scope?: string;
+  audience?: string[];
   token_endpoint_auth_method?: string;
+  client_uri?: string;
+  logo_uri?: string;
+  policy_uri?: string;
+  tos_uri?: string;
+  contacts?: string[];
   created_at?: string;
+  updated_at?: string;
+}
+
+/** Hydra stores scopes as a single space-delimited string; split to a list. */
+export function splitScopes(scope: string | undefined): string[] {
+  return (scope ?? "").split(/\s+/).filter(Boolean);
 }
 
 export interface PageResult<T> {
@@ -76,6 +88,19 @@ export async function listOAuth2Clients(
   } catch (err) {
     return { items: [], error: (err as Error).message };
   }
+}
+
+export async function getOAuth2Client(
+  tenant: TenantContext,
+  clientId: string,
+): Promise<OAuth2Client> {
+  const url = new URL(
+    `/admin/clients/${encodeURIComponent(clientId)}`,
+    adminUrl(tenant),
+  );
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) await handleError(res, url.pathname);
+  return (await res.json()) as OAuth2Client;
 }
 
 export async function createOAuth2Client(
