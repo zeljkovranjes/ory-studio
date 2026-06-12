@@ -140,3 +140,24 @@ export function sectionForPath(pathname: string): NavSection | undefined {
     ),
   );
 }
+
+/**
+ * The href of the sidebar item that should be highlighted for `pathname`.
+ * Returns the LONGEST matching item href so a parent like `/activity` (Live)
+ * isn't also marked active when a more specific sibling like `/activity/events`
+ * (Logs & events) matches.
+ */
+export function activeSidebarHref(
+  sidebar: NavItem[],
+  pathname: string,
+): string | undefined {
+  let best: string | undefined;
+  for (const item of sidebar) {
+    if (pathname === item.href || pathname.startsWith(`${item.href}/`)) {
+      if (best === undefined || item.href.length > best.length) {
+        best = item.href;
+      }
+    }
+  }
+  return best;
+}
