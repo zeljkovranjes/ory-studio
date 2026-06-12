@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { CopyButton } from "@/components/CopyButton";
 import { recoveryCodeAction, type RecoveryCodeState } from "./actions";
 
 /** Generates a recovery code via the admin API and shows it inline (never in the URL). */
@@ -32,19 +33,21 @@ export function RecoveryCode({ identityId }: { identityId: string }) {
       {state.result ? (
         <div className="mt-3 rounded border border-border bg-canvas px-4 py-3 text-sm">
           {state.result.recovery_code ? (
-            <div>
+            <div className="flex items-center gap-2">
               <span className="text-fg-muted">Code: </span>
               <code className="rounded bg-bg-subtle px-1.5 py-0.5 font-mono">
                 {state.result.recovery_code}
               </code>
+              <CopyButton value={state.result.recovery_code} />
             </div>
           ) : null}
           {state.result.recovery_link ? (
-            <div className="mt-1 break-all">
+            <div className="mt-1 flex items-center gap-2 break-all">
               <span className="text-fg-muted">Link: </span>
-              <code className="font-mono text-xs">
+              <code className="flex-1 font-mono text-xs">
                 {state.result.recovery_link}
               </code>
+              <CopyButton value={state.result.recovery_link} />
             </div>
           ) : null}
           {state.result.expires_at ? (
