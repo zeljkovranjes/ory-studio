@@ -26,6 +26,38 @@ export function splitScopes(scope: string | undefined): string[] {
   return (scope ?? "").split(/\s+/).filter(Boolean);
 }
 
+// Schemes that must never be accepted as OAuth2 redirect targets — they can
+// execute script or load inline content if a flow ever reflects the URI.
+const DANGEROUS_REDIRECT_SCHEMES = ["javascript:", "data:", "vbscript:", "file:"];
+
+/**
+ * Parse newline-separated redirect URIs from a form field. Each must be an
+ * absolute URI with a `scheme://...` shape and a non-dangerous scheme; custom
+ * mobile schemes (e.g. `myapp://callback`) are allowed. Returns the accepted
+ * URIs and any rejected lines so the caller can surface a clear error.
+ */
+export function parseRedirectUris(text: string): {
+  uris: string[];
+  invalid: string[];
+} {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const uris: string[] = [];
+  const invalid: string[] = [];
+  for (const line of lines) {
+    const lower = line.toLowerCase();
+    const shaped = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/.+/.test(line);
+    const dangerous = DANGEROUS_REDIRECT_SCHEMES.some((s) =>
+      lower.startsWith(s),
+    );
+    if (shaped && !dangerous) uris.push(line);
+    else invalid.push(line);
+  }
+  return { uris, invalid };
+}
+
 export interface PageResult<T> {
   items: T[];
   nextPageToken?: string;
