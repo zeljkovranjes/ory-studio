@@ -23,9 +23,12 @@ export async function createKeyAction(
   await requireSession();
   const tenant = await currentTenant();
   try {
+    const rawDays = Number(formData.get("expires_in_days"));
+    const expiresInDays = Number.isInteger(rawDays) && rawDays > 0 ? rawDays : null;
     const { token, prefix } = await createApiKey(
       tenant.id,
       String(formData.get("name") ?? ""),
+      expiresInDays,
     );
     revalidatePath(PAGE);
     return { token, prefix };
