@@ -8,6 +8,7 @@ import {
   EmptyState,
   ErrorState,
   PageHeader,
+  RelativeTime,
   Table,
 } from "@/components/ui";
 import { Pagination } from "@/components/Pagination";
@@ -93,7 +94,7 @@ export default async function EmailDeliveryPage({
                   </Badge>
                 </td>
                 <td className="px-3 py-2 text-fg-muted">
-                  {new Date(message.created_at).toLocaleString()}
+                  <RelativeTime iso={message.created_at} />
                 </td>
               </tr>
             ))}
