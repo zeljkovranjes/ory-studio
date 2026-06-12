@@ -349,6 +349,25 @@ export async function listIdentitySessions(
   }
 }
 
+export async function getSession(
+  tenant: TenantContext,
+  id: string,
+): Promise<KratosSession> {
+  // Kratos needs the expand params repeated (not comma-joined) to include both
+  // the identity and the device list, so build the URL directly.
+  const url = new URL(
+    `/admin/sessions/${encodeURIComponent(id)}`,
+    tenant.services.kratosAdminUrl,
+  );
+  url.searchParams.append("expand", "Identity");
+  url.searchParams.append("expand", "Devices");
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(`Kratos admin API ${res.status} for ${url.pathname}`);
+  }
+  return (await res.json()) as KratosSession;
+}
+
 export async function revokeIdentitySessions(
   tenant: TenantContext,
   id: string,
