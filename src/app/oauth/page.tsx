@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { listOAuth2Clients } from "@/lib/hydra";
 import { Pagination } from "@/components/Pagination";
 import { currentTenant } from "@/lib/tenant";
@@ -50,7 +51,12 @@ export default async function OAuthClientsPage({
             {result.items.map((client) => (
               <tr key={client.client_id} className="hover:bg-canvas">
                 <td className="px-3 py-2 font-medium">
-                  {client.client_name || "—"}
+                  <Link
+                    href={`/oauth/${encodeURIComponent(client.client_id)}`}
+                    className="hover:text-accent hover:underline"
+                  >
+                    {client.client_name || "(unnamed client)"}
+                  </Link>
                 </td>
                 <td className="px-3 py-2 font-mono text-xs text-fg-muted">
                   {client.client_id}
