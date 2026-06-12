@@ -219,14 +219,40 @@ export async function getIdentity(
   return data;
 }
 
-export async function createIdentity(
-  tenant: TenantContext,
-  input: { schemaId: string; traits: Record<string, unknown> },
-): Promise<KratosIdentity> {
-  return adminSend<KratosIdentity>(tenant, "POST", "/admin/identities", {
+export interface CreateIdentityInput {
+  schemaId: string;
+  traits: Record<string, unknown>;
+  /** Optional initial password; sets a password credential on the identity. */
+  password?: string;
+}
+
+/** Build the admin create-identity request body, including a password
+ * credential only when an initial password is supplied. */
+export function buildCreateIdentityBody(
+  input: CreateIdentityInput,
+): Record<string, unknown> {
+  const body: Record<string, unknown> = {
     schema_id: input.schemaId,
     traits: input.traits,
-  });
+  };
+  if (input.password) {
+    body.credentials = {
+      password: { config: { password: input.password } },
+    };
+  }
+  return body;
+}
+
+export async function createIdentity(
+  tenant: TenantContext,
+  input: CreateIdentityInput,
+): Promise<KratosIdentity> {
+  return adminSend<KratosIdentity>(
+    tenant,
+    "POST",
+    "/admin/identities",
+    buildCreateIdentityBody(input),
+  );
 }
 
 export async function deleteIdentity(
