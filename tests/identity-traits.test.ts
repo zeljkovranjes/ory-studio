@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildTraits, parseTraitsObject } from "@/lib/identity-traits";
+import { buildCreateIdentityBody } from "@/lib/kratos";
 
 describe("buildTraits", () => {
   it("builds traits from simple fields", () => {
@@ -32,6 +33,36 @@ describe("buildTraits", () => {
     expect(() => buildTraits({ email: "", rawTraits: "[1,2]" })).toThrow(
       /JSON object/,
     );
+  });
+});
+
+describe("buildCreateIdentityBody", () => {
+  const traits = { email: "a@b.co" };
+
+  it("builds a body with schema_id and traits, no credentials by default", () => {
+    const body = buildCreateIdentityBody({ schemaId: "default", traits });
+    expect(body).toEqual({ schema_id: "default", traits });
+    expect(body).not.toHaveProperty("credentials");
+  });
+
+  it("includes a password credential only when a password is given", () => {
+    const body = buildCreateIdentityBody({
+      schemaId: "default",
+      traits,
+      password: "s3cr3t-Passw0rd!",
+    });
+    expect(body.credentials).toEqual({
+      password: { config: { password: "s3cr3t-Passw0rd!" } },
+    });
+  });
+
+  it("omits credentials for an empty password string", () => {
+    const body = buildCreateIdentityBody({
+      schemaId: "default",
+      traits,
+      password: "",
+    });
+    expect(body).not.toHaveProperty("credentials");
   });
 });
 
