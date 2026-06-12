@@ -5,6 +5,7 @@ import { requireSession } from "@/lib/require-session";
 import {
   createOAuth2Client,
   deleteOAuth2Client,
+  parseRedirectUris,
   type OAuth2Client,
 } from "@/lib/hydra";
 import { flashRedirect } from "@/lib/flash";
@@ -22,14 +23,11 @@ export async function createClientAction(
   await requireSession();
   const grantTypes = formData.getAll("grant_types").map(String);
   const responseTypes = formData.getAll("response_types").map(String);
-  const redirectUris = String(formData.get("redirect_uris") ?? "")
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-  for (const uri of redirectUris) {
-    if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/.+/.test(uri)) {
-      return { error: `Invalid redirect URI: ${uri}` };
-    }
+  const { uris: redirectUris, invalid } = parseRedirectUris(
+    String(formData.get("redirect_uris") ?? ""),
+  );
+  if (invalid.length > 0) {
+    return { error: `Invalid redirect URI: ${invalid.join(", ")}` };
   }
   if (grantTypes.length === 0) {
     return { error: "Select at least one grant type" };
