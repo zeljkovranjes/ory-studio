@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { identityIdentifier, listSessions } from "@/lib/kratos";
 import { parseActiveFilter } from "@/lib/session-filter";
 import { currentTenant } from "@/lib/tenant";
@@ -115,22 +116,34 @@ export default async function SessionsPage({
                       : "—"}
                   </td>
                   <td className="px-3 py-2 text-right">
-                    {session.active ? (
-                      <form action={revokeSessionAction}>
-                        <input
-                          type="hidden"
-                          name="session_id"
-                          value={session.id}
-                        />
-                        <input type="hidden" name="redirect_to" value="/sessions" />
-                        <button
-                          type="submit"
-                          className="rounded border border-border bg-surface px-2.5 py-1 text-xs font-medium text-fg hover:bg-bg-subtle"
-                        >
-                          Revoke
-                        </button>
-                      </form>
-                    ) : null}
+                    <span className="flex items-center justify-end gap-3">
+                      <Link
+                        href={`/sessions/${session.id}`}
+                        className="text-sm text-fg-muted hover:text-accent"
+                      >
+                        Details
+                      </Link>
+                      {session.active ? (
+                        <form action={revokeSessionAction}>
+                          <input
+                            type="hidden"
+                            name="session_id"
+                            value={session.id}
+                          />
+                          <input
+                            type="hidden"
+                            name="redirect_to"
+                            value="/sessions"
+                          />
+                          <button
+                            type="submit"
+                            className="rounded border border-border bg-surface px-2.5 py-1 text-xs font-medium text-fg hover:bg-bg-subtle"
+                          >
+                            Revoke
+                          </button>
+                        </form>
+                      ) : null}
+                    </span>
                   </td>
                 </tr>
               );
