@@ -1,5 +1,21 @@
 /** Small shared building blocks for console pages. */
 
+import { formatRelativeTime } from "@/lib/time";
+
+/**
+ * Render a timestamp as compact relative time ("5m ago") with the full local
+ * time as a hover tooltip. Server-rendered, so no hydration concerns.
+ */
+export function RelativeTime({ iso }: { iso: string }) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return <span>—</span>;
+  return (
+    <span title={date.toLocaleString()}>
+      {formatRelativeTime(iso, Date.now())}
+    </span>
+  );
+}
+
 export function PageHeader({
   title,
   description,
