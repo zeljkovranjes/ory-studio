@@ -7,6 +7,7 @@ import {
   EmptyState,
   ErrorState,
   PageHeader,
+  RelativeTime,
   Table,
 } from "@/components/ui";
 
@@ -80,9 +81,11 @@ export default async function OAuthClientDetailPage({
           </dd>
           <dt className="text-fg-muted">Created</dt>
           <dd>
-            {client.created_at
-              ? new Date(client.created_at).toLocaleString()
-              : "—"}
+            {client.created_at ? (
+              <RelativeTime iso={client.created_at} />
+            ) : (
+              "—"
+            )}
           </dd>
         </dl>
       </Card>
