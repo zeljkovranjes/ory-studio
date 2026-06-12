@@ -1,5 +1,6 @@
 import { currentTenant } from "@/lib/tenant";
-import { Card, PageHeader } from "@/components/ui";
+import { probeHealth } from "@/lib/health";
+import { Badge, Card, PageHeader, Table } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -22,12 +23,43 @@ export default async function GetStartedPage() {
       : []),
   ].join("\n");
 
+  // Probe each configured service's readiness endpoint in parallel.
+  const services = [
+    { name: "Kratos (public)", url: tenant.services.kratosPublicUrl },
+    { name: "Kratos (admin)", url: tenant.services.kratosAdminUrl },
+    { name: "Hydra (admin)", url: tenant.services.hydraAdminUrl },
+    { name: "Keto (read)", url: tenant.services.ketoReadUrl },
+  ].filter((s): s is { name: string; url: string } => Boolean(s.url));
+  const health = await Promise.all(
+    services.map(async (s) => ({ ...s, result: await probeHealth(s.url) })),
+  );
+
   return (
     <>
       <PageHeader
         title="Get started"
         description="Wire your application to this instance. The SDK URL below is the Kratos public endpoint your frontend talks to."
       />
+
+      <Card
+        title="Service health"
+        description="Readiness of the bundled Ory services. A service marked down usually means its container isn't running or is still starting."
+      >
+        <Table headers={["Service", "Status"]}>
+          {health.map((s) => (
+            <tr key={s.name}>
+              <td className="px-3 py-2 font-medium">{s.name}</td>
+              <td className="px-3 py-2">
+                <Badge tone={s.result.ok ? "success" : "error"}>
+                  {s.result.ok
+                    ? "ready"
+                    : `down${s.result.status ? ` (${s.result.status})` : ""}`}
+                </Badge>
+              </td>
+            </tr>
+          ))}
+        </Table>
+      </Card>
 
       <Card title="Environment variables">
         <pre className="overflow-x-auto rounded bg-canvas p-3 font-mono text-xs">
