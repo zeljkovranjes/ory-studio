@@ -1,4 +1,5 @@
 import { identityIdentifier, listSessions } from "@/lib/kratos";
+import { parseActiveFilter } from "@/lib/session-filter";
 import { currentTenant } from "@/lib/tenant";
 import {
   Avatar,
@@ -21,14 +22,16 @@ export default async function SessionsPage({
 }: {
   searchParams: Promise<{
     page_token?: string;
+    active?: string;
     saved?: string;
     warning?: string;
     error?: string;
   }>;
 }) {
-  const { page_token, ...flash } = await searchParams;
+  const { page_token, active: activeParam, ...flash } = await searchParams;
+  const active = parseActiveFilter(activeParam);
   const tenant = await currentTenant();
-  const result = await listSessions(tenant, { pageToken: page_token });
+  const result = await listSessions(tenant, { pageToken: page_token, active });
 
   return (
     <>
@@ -38,6 +41,25 @@ export default async function SessionsPage({
       />
       <Flash {...flash} />
       <Card>
+        <form className="mb-4 flex items-center gap-2" action="/sessions">
+          <label className="text-sm text-fg-muted">Show</label>
+          <select
+            name="active"
+            defaultValue={activeParam ?? "all"}
+            className="h-9 rounded border border-border bg-surface px-2 text-sm focus:border-accent focus:outline-none"
+          >
+            <option value="all">All sessions</option>
+            <option value="active">Active only</option>
+            <option value="inactive">Inactive only</option>
+          </select>
+          <button
+            type="submit"
+            className="h-9 rounded bg-accent px-4 text-sm font-medium text-fg-on-accent hover:bg-accent-emphasis"
+          >
+            Filter
+          </button>
+        </form>
+
         {result.error ? (
           <ErrorState
             message={`Could not reach Kratos admin API: ${result.error}`}
@@ -120,7 +142,12 @@ export default async function SessionsPage({
           pageSize={25}
           nextHref={
             result.nextPageToken
-              ? `/sessions?page_token=${result.nextPageToken}`
+              ? `/sessions?${new URLSearchParams({
+                  ...(activeParam && activeParam !== "all"
+                    ? { active: activeParam }
+                    : {}),
+                  page_token: result.nextPageToken,
+                })}`
               : null
           }
         />
