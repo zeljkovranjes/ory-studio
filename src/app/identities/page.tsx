@@ -9,6 +9,7 @@ import {
   EmptyState,
   ErrorState,
   PageHeader,
+  RelativeTime,
   StatCard,
   Table,
 } from "@/components/ui";
@@ -149,7 +150,7 @@ export default async function IdentitiesPage({
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-fg-muted">
-                      {new Date(identity.created_at).toLocaleDateString()}
+                      <RelativeTime iso={identity.created_at} />
                     </td>
                     <td className="px-4 py-3 text-right">
                       <RowMenu
