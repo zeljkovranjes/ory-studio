@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { CopyButton } from "@/components/CopyButton";
 import { createClientAction, type CreateClientState } from "./actions";
 
 const GRANT_TYPES = [
@@ -25,18 +26,20 @@ export function CreateClientForm() {
         </div>
         <dl className="mt-4 grid grid-cols-[8rem_1fr] gap-y-2 text-sm">
           <dt className="text-fg-muted">Client ID</dt>
-          <dd>
+          <dd className="flex items-center gap-2">
             <code className="rounded bg-bg-subtle px-1.5 py-0.5 font-mono text-xs">
               {state.client.client_id}
             </code>
+            <CopyButton value={state.client.client_id} />
           </dd>
           {state.client.client_secret ? (
             <>
               <dt className="text-fg-muted">Client Secret</dt>
-              <dd>
+              <dd className="flex items-center gap-2">
                 <code className="rounded bg-bg-subtle px-1.5 py-0.5 font-mono text-xs">
                   {state.client.client_secret}
                 </code>
+                <CopyButton value={state.client.client_secret} />
               </dd>
             </>
           ) : null}
