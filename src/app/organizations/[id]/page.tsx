@@ -16,6 +16,7 @@ import {
   EmptyState,
   ErrorState,
   PageHeader,
+  RelativeTime,
   Table,
 } from "@/components/ui";
 import { Flash, SaveButton, SelectField, TextField } from "@/components/forms";
@@ -123,7 +124,9 @@ export default async function OrganizationDetailPage({
             )}
           </dd>
           <dt className="text-fg-muted">Created</dt>
-          <dd>{new Date(org.created_at).toLocaleString()}</dd>
+          <dd>
+            <RelativeTime iso={org.created_at} />
+          </dd>
         </dl>
       </Card>
 
