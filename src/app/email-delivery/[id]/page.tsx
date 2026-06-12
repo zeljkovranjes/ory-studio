@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { getCourierMessage } from "@/lib/kratos";
 import { currentTenant } from "@/lib/tenant";
-import { Badge, Card, ErrorState, PageHeader } from "@/components/ui";
+import {
+  Badge,
+  Card,
+  ErrorState,
+  PageHeader,
+  RelativeTime,
+} from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +67,9 @@ export default async function CourierMessagePage({
             </Badge>
           </dd>
           <dt className="text-fg-muted">Created</dt>
-          <dd>{new Date(message.created_at).toLocaleString()}</dd>
+          <dd>
+            <RelativeTime iso={message.created_at} />
+          </dd>
         </dl>
       </Card>
 
