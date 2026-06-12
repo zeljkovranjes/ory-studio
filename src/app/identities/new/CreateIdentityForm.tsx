@@ -63,6 +63,21 @@ export function CreateIdentityForm({
         </label>
       </div>
 
+      <label className="block py-2 text-sm">
+        <span className="font-medium">Initial password</span>
+        <span className="ml-1 text-fg-subtle">(optional)</span>
+        <input
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          placeholder="Leave blank to create without a password"
+          className="mt-1 block h-8 w-full max-w-md rounded border border-border px-2 text-sm text-input-text placeholder:text-input-placeholder focus:border-accent focus:outline-none"
+        />
+        <span className="mt-1 block text-xs text-fg-muted">
+          Sets a password credential. Kratos enforces your password policy.
+        </span>
+      </label>
+
       <details className="py-2">
         <summary className="cursor-pointer text-sm text-fg-muted">
           Advanced: raw traits JSON (overrides the fields above)
