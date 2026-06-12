@@ -14,6 +14,7 @@ import {
   EmptyState,
   ErrorState,
   PageHeader,
+  RelativeTime,
   Table,
 } from "@/components/ui";
 import { Flash } from "@/components/forms";
@@ -107,9 +108,13 @@ export default async function IdentityDetailPage({
           <dt className="text-fg-muted">Schema</dt>
           <dd>{identity.schema_id}</dd>
           <dt className="text-fg-muted">Created</dt>
-          <dd>{new Date(identity.created_at).toLocaleString()}</dd>
+          <dd>
+            <RelativeTime iso={identity.created_at} />
+          </dd>
           <dt className="text-fg-muted">Updated</dt>
-          <dd>{new Date(identity.updated_at).toLocaleString()}</dd>
+          <dd>
+            <RelativeTime iso={identity.updated_at} />
+          </dd>
         </dl>
       </Card>
 
@@ -134,9 +139,7 @@ export default async function IdentityDetailPage({
                   )}
                 </td>
                 <td className="px-3 py-2 text-fg-muted">
-                  {cred.createdAt
-                    ? new Date(cred.createdAt).toLocaleDateString()
-                    : "—"}
+                  {cred.createdAt ? <RelativeTime iso={cred.createdAt} /> : "—"}
                 </td>
               </tr>
             ))}
@@ -258,7 +261,7 @@ export default async function IdentityDetailPage({
                   {session.authenticator_assurance_level}
                 </td>
                 <td className="px-3 py-2 text-fg-muted">
-                  {new Date(session.authenticated_at).toLocaleString()}
+                  <RelativeTime iso={session.authenticated_at} />
                 </td>
                 <td className="px-3 py-2 text-fg-muted">
                   {new Date(session.expires_at).toLocaleString()}
