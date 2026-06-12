@@ -7,6 +7,7 @@ import {
   EmptyState,
   ErrorState,
   PageHeader,
+  RelativeTime,
   Table,
 } from "@/components/ui";
 import { Flash } from "@/components/forms";
@@ -81,7 +82,7 @@ export default async function SessionsPage({
                     {session.authenticator_assurance_level}
                   </td>
                   <td className="px-3 py-2 text-fg-muted">
-                    {new Date(session.authenticated_at).toLocaleString()}
+                    <RelativeTime iso={session.authenticated_at} />
                   </td>
                   <td className="px-3 py-2 text-fg-muted">
                     {new Date(session.expires_at).toLocaleString()}
