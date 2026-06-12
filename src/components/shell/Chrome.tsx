@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SECTIONS, sectionForPath, type NavSection } from "@/lib/nav";
+import {
+  activeSidebarHref,
+  SECTIONS,
+  sectionForPath,
+  type NavSection,
+} from "@/lib/nav";
 import { logoutAction } from "@/app/login/actions";
 import { TenantSwitcher, type TenantOption } from "./TenantSwitcher";
 
@@ -117,12 +122,12 @@ function SideNav({
   pathname: string;
 }) {
   if (section.sidebar.length === 0) return null;
+  const activeHref = activeSidebarHref(section.sidebar, pathname);
   return (
     <aside className="w-56 shrink-0 pt-8 pr-6">
       <ul className="space-y-1.5">
         {section.sidebar.map((item) => {
-          const active =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active = item.href === activeHref;
           return (
             <li key={item.href}>
               <Link
@@ -156,9 +161,11 @@ export function Chrome({
   if (pathname === "/login") return <>{children}</>;
 
   const section = sectionForPath(pathname);
+  const activeHref = section
+    ? activeSidebarHref(section.sidebar, pathname)
+    : undefined;
   const subLabel = section?.sidebar.find(
-    (item) =>
-      pathname === item.href || pathname.startsWith(`${item.href}/`),
+    (item) => item.href === activeHref,
   )?.label;
 
   return (
