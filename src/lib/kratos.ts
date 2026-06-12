@@ -131,6 +131,8 @@ export async function listSessions(
         page_size: String(opts.pageSize ?? 25),
         page_token: opts.pageToken,
         active: opts.active === undefined ? undefined : String(opts.active),
+        // Include the identity so the list can show who each session belongs to.
+        expand: "Identity",
       },
     );
     return { items: data, nextPageToken: parseNextPageToken(link) };
