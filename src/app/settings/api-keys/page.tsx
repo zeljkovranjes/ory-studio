@@ -1,10 +1,12 @@
-import { listApiKeys } from "@/lib/api-keys";
+import { isApiKeyExpired, listApiKeys } from "@/lib/api-keys";
 import { currentTenant } from "@/lib/tenant";
 import {
+  Badge,
   Card,
   EmptyState,
   ErrorState,
   PageHeader,
+  RelativeTime,
   Table,
 } from "@/components/ui";
 import { Flash } from "@/components/forms";
@@ -43,7 +45,9 @@ export default async function ApiKeysPage({
         ) : keys.length === 0 ? (
           <EmptyState message="No API keys yet. Create one below." />
         ) : (
-          <Table headers={["Name", "Prefix", "Created", "Last used", ""]}>
+          <Table
+            headers={["Name", "Prefix", "Created", "Last used", "Expires", ""]}
+          >
             {keys.map((k) => (
               <tr key={k.id} className="hover:bg-canvas">
                 <td className="px-4 py-3 font-medium">{k.name}</td>
@@ -51,12 +55,19 @@ export default async function ApiKeysPage({
                   {k.prefix}…
                 </td>
                 <td className="px-4 py-3 text-fg-muted">
-                  {new Date(k.created_at).toLocaleDateString()}
+                  <RelativeTime iso={k.created_at} />
                 </td>
                 <td className="px-4 py-3 text-fg-muted">
-                  {k.last_used_at
-                    ? new Date(k.last_used_at).toLocaleString()
-                    : "never"}
+                  {k.last_used_at ? <RelativeTime iso={k.last_used_at} /> : "never"}
+                </td>
+                <td className="px-4 py-3 text-fg-muted">
+                  {!k.expires_at ? (
+                    "never"
+                  ) : isApiKeyExpired(k, Date.now()) ? (
+                    <Badge tone="error">expired</Badge>
+                  ) : (
+                    <RelativeTime iso={k.expires_at} />
+                  )}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <form action={revokeKeyAction}>
