@@ -40,6 +40,19 @@ export function CreateKeyForm() {
           className="mt-1 block h-10 w-64 rounded border border-border px-3 text-sm focus:border-accent focus:outline-none"
         />
       </label>
+      <label className="text-sm">
+        <span className="font-medium">Expires</span>
+        <select
+          name="expires_in_days"
+          defaultValue=""
+          className="mt-1 block h-10 w-40 rounded border border-border bg-surface px-2 text-sm focus:border-accent focus:outline-none"
+        >
+          <option value="">Never</option>
+          <option value="30">30 days</option>
+          <option value="90">90 days</option>
+          <option value="365">1 year</option>
+        </select>
+      </label>
       <button
         type="submit"
         disabled={pending}
