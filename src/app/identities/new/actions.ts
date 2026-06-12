@@ -25,9 +25,11 @@ export async function createIdentityAction(
       last: String(formData.get("last") ?? "").trim(),
       rawTraits: String(formData.get("raw_traits") ?? ""),
     });
+    const password = String(formData.get("password") ?? "");
     const identity = await createIdentity(tenant, {
       schemaId: String(formData.get("schema_id") ?? "default"),
       traits,
+      password: password || undefined,
     });
     identityId = identity.id;
   } catch (err) {
