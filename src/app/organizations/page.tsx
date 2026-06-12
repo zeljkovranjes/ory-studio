@@ -15,6 +15,7 @@ import {
   EmptyState,
   ErrorState,
   PageHeader,
+  RelativeTime,
   Table,
 } from "@/components/ui";
 import { Flash, SaveButton, TextField } from "@/components/forms";
@@ -182,7 +183,7 @@ export default async function OrganizationsPage({
                   )}
                 </td>
                 <td className="px-4 py-3 text-fg-muted">
-                  {new Date(org.created_at).toLocaleDateString()}
+                  <RelativeTime iso={org.created_at} />
                 </td>
                 <td className="px-4 py-3 text-right">
                   <form action={deleteOrgAction}>
