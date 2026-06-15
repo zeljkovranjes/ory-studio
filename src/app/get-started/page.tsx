@@ -23,12 +23,14 @@ export default async function GetStartedPage() {
       : []),
   ].join("\n");
 
-  // Probe each configured service's readiness endpoint in parallel.
+  // Probe each service's readiness endpoint in parallel. These run server-side
+  // from the studio, so we use the internal admin/read URLs the studio talks to
+  // — never the public URL, which is browser-facing (e.g. localhost) and not
+  // reachable from inside the studio container.
   const services = [
-    { name: "Kratos (public)", url: tenant.services.kratosPublicUrl },
-    { name: "Kratos (admin)", url: tenant.services.kratosAdminUrl },
-    { name: "Hydra (admin)", url: tenant.services.hydraAdminUrl },
-    { name: "Keto (read)", url: tenant.services.ketoReadUrl },
+    { name: "Kratos", url: tenant.services.kratosAdminUrl },
+    { name: "Hydra", url: tenant.services.hydraAdminUrl },
+    { name: "Keto", url: tenant.services.ketoReadUrl },
   ].filter((s): s is { name: string; url: string } => Boolean(s.url));
   const health = await Promise.all(
     services.map(async (s) => ({ ...s, result: await probeHealth(s.url) })),
