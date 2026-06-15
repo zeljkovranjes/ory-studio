@@ -1,0 +1,29 @@
+# Never copy these into the build context — the image installs its own deps.
+# Copying the host node_modules (built on the dev OS) breaks the Linux build:
+# pnpm's symlinks point at a store that doesn't exist in the image.
+node_modules
+**/node_modules
+
+# Build output / caches
+.next
+dist
+*.tsbuildinfo
+
+# VCS and local tooling
+.git
+.gitignore
+.claude
+.mcp.json
+docs/superpowers
+
+# Secrets and local env (the studio reads env from compose, not the image)
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# Misc
+.DS_Store
+npm-debug.log*
+Dockerfile
+.dockerignore
