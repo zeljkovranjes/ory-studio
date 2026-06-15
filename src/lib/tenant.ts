@@ -14,7 +14,15 @@ import { getTenantBySlug, listTenants, type TenantRecord } from "./tenants";
 
 export interface TenantServices {
   kratosAdminUrl: string;
+  /** Browser-facing Kratos public URL (e.g. localhost:4433) — for display/SDK. */
   kratosPublicUrl: string;
+  /**
+   * Internally-reachable Kratos public URL for server-side calls (e.g. the
+   * `/schemas` endpoint). In container setups the public URL is browser-facing
+   * (localhost) and not reachable from the studio, so this points at the
+   * internal hostname (e.g. http://kratos:4433). Defaults to kratosPublicUrl.
+   */
+  kratosPublicInternalUrl: string;
   hydraAdminUrl?: string;
   ketoReadUrl?: string;
   ketoWriteUrl?: string;
@@ -46,9 +54,13 @@ export function tenancyMode(): TenancyMode {
 }
 
 function envServices(): TenantServices {
+  const kratosPublicUrl =
+    process.env.ORY_KRATOS_PUBLIC_URL ?? "http://localhost:4433";
   return {
     kratosAdminUrl: process.env.ORY_KRATOS_ADMIN_URL ?? "http://localhost:4434",
-    kratosPublicUrl: process.env.ORY_KRATOS_PUBLIC_URL ?? "http://localhost:4433",
+    kratosPublicUrl,
+    kratosPublicInternalUrl:
+      process.env.ORY_KRATOS_PUBLIC_INTERNAL_URL ?? kratosPublicUrl,
     hydraAdminUrl: process.env.ORY_HYDRA_ADMIN_URL,
     ketoReadUrl: process.env.ORY_KETO_READ_URL,
     ketoWriteUrl: process.env.ORY_KETO_WRITE_URL,
@@ -76,6 +88,9 @@ function recordToContext(t: TenantRecord): TenantContext {
     services: {
       kratosAdminUrl: t.kratos_admin_url,
       kratosPublicUrl: t.kratos_public_url,
+      // Multi-tenant records store one public URL; reuse it for server-side
+      // calls (each tenant's Kratos is reached at its configured public URL).
+      kratosPublicInternalUrl: t.kratos_public_url,
       hydraAdminUrl: t.hydra_admin_url ?? undefined,
       ketoReadUrl: t.keto_read_url ?? undefined,
       ketoWriteUrl: t.keto_write_url ?? undefined,

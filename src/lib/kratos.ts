@@ -411,12 +411,14 @@ export interface IdentitySchemaEntry {
   schema: Record<string, unknown>;
 }
 
-/** Identity schemas are served on the public API. */
+/** Identity schemas are served on the public API. Use the internal public URL
+ * so this server-side call works in container setups where the public URL is
+ * browser-facing (localhost). */
 export async function listIdentitySchemas(
   tenant: TenantContext,
 ): Promise<{ items: IdentitySchemaEntry[]; error?: string }> {
   try {
-    const url = new URL("/schemas", tenant.services.kratosPublicUrl);
+    const url = new URL("/schemas", tenant.services.kratosPublicInternalUrl);
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) throw new Error(`Kratos public API ${res.status} for /schemas`);
     return { items: (await res.json()) as IdentitySchemaEntry[] };
