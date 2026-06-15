@@ -3,7 +3,9 @@ RUN corepack enable pnpm
 
 FROM base AS deps
 WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
+# pnpm-workspace.yaml holds the dependency `overrides`; without it a frozen
+# install fails with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH against the lockfile.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 FROM base AS build
