@@ -4,6 +4,30 @@ ory-studio is designed to run as a single self-hosted bundle: the studio plus
 the Ory services (Kratos, Hydra, Keto), Postgres, the account-experience UI, and
 a Caddy reverse proxy that terminates TLS. The simplest target is one VM.
 
+## Run locally
+
+The base compose file runs the whole bundle on your machine — no domains or TLS
+needed. Requires Docker with the Compose plugin.
+
+```sh
+cp .env.example .env       # adjust STUDIO_ADMIN_PASSWORD etc. if you like
+docker compose up -d --build
+```
+
+This builds the studio image and starts Postgres, Kratos, Hydra, Keto, the
+account-experience UI, Mailpit, and the studio. Then open:
+
+- **Studio** — http://localhost:4480
+- **Account experience** — http://localhost:4455
+- **Mailpit (dev inbox)** — http://localhost:8025
+
+Log in with `STUDIO_ADMIN_USER` / `STUDIO_ADMIN_PASSWORD` from your `.env` (if no
+password is set, access is open — local only). Tear it down with:
+
+```sh
+docker compose down          # add -v to also drop the Postgres volume
+```
+
 ## Single-VM deploy
 
 1. **Provision a VM** with Docker + the Compose plugin, and a public IP.

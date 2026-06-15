@@ -1,16 +1,16 @@
 FROM node:22-alpine AS base
 RUN corepack enable pnpm
 
-FROM base AS deps
+# Install deps and build in a single stage. pnpm's node_modules uses symlinks
+# into a virtual store, which don't survive a cross-stage `COPY node_modules`,
+# so we install where we build. The runner only needs the self-contained
+# `.next/standalone` output, not node_modules.
+FROM base AS build
 WORKDIR /app
 # pnpm-workspace.yaml holds the dependency `overrides`; without it a frozen
 # install fails with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH against the lockfile.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
-
-FROM base AS build
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV STANDALONE=1
 RUN pnpm build
