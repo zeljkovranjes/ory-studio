@@ -7,16 +7,7 @@ friends with a Supabase-Studio-style UI on top.
 
 ## Usage
 
-```sh
-pointless run up      # start the Ory service bundle (docker compose up -d)
-pointless dev         # run the studio with hot reload at http://localhost:3000
-pointless build       # production build
-pointless test        # run the test suite
-pointless lint        # eslint + tsc --noEmit
-pointless run down    # stop the service bundle
-```
-
-Copy `.env.example` to `.env` and fill in values before `pointless dev`.
+See [`DEPLOY.md`](./DEPLOY.md) for setup, configuration, and running the studio.
 
 ## What's inside
 
@@ -26,7 +17,8 @@ Copy `.env.example` to `.env` and fill in values before `pointless dev`.
 | Service bundle | `docker-compose.yml` |
 | Service configs (owned by the studio's config engine) | `config/kratos/`, `config/hydra/`, `config/keto/` |
 | Feature blueprint extracted from Ory Console | `docs/ory-console-extraction.md` |
-| Contributor & AI-agent guide (repo conventions) | [`CLAUDE.md`](./CLAUDE.md) |
+| Deployment guide | [`DEPLOY.md`](./DEPLOY.md) |
+| Security policy | [`SECURITY.md`](./SECURITY.md) |
 
 ## Services & ports (dev defaults)
 

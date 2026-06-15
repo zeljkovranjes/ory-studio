@@ -19,6 +19,7 @@ dist/
 .claude/
 .mcp.json
 .pointless/
+CLAUDE.md
 docs/superpowers/
 
 # misc
