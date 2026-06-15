@@ -26,6 +26,7 @@ Copy `.env.example` to `.env` and fill in values before `pointless dev`.
 | Service bundle | `docker-compose.yml` |
 | Service configs (owned by the studio's config engine) | `config/kratos/`, `config/hydra/`, `config/keto/` |
 | Feature blueprint extracted from Ory Console | `docs/ory-console-extraction.md` |
+| Contributor & AI-agent guide (repo conventions) | [`CLAUDE.md`](./CLAUDE.md) |
 
 ## Services & ports (dev defaults)
 
