@@ -16,7 +16,6 @@ See [`DEPLOY.md`](./DEPLOY.md) for setup, configuration, and running the studio.
 | Studio app (Next.js) | `src/` |
 | Service bundle | `docker-compose.yml` |
 | Service configs (owned by the studio's config engine) | `config/kratos/`, `config/hydra/`, `config/keto/` |
-| Feature blueprint extracted from Ory Console | `docs/ory-console-extraction.md` |
 | Deployment guide | [`DEPLOY.md`](./DEPLOY.md) |
 | Security policy | [`SECURITY.md`](./SECURITY.md) |
 

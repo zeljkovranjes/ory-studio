@@ -21,6 +21,7 @@ dist/
 .pointless/
 CLAUDE.md
 docs/superpowers/
+docs/ory-console-extraction.md
 
 # misc
 .DS_Store

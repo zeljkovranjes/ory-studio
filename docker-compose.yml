@@ -147,7 +147,7 @@ services:
       # config engine: studio reloads service containers after writing config
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
-      - "3000:3000"
+      - "4480:3000"
     depends_on:
       - kratos
     restart: unless-stopped
