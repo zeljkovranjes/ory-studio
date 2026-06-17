@@ -51,6 +51,12 @@
   --color-input-placeholder: #9e9e9e;
 }
 
+html {
+  /* Always reserve space for the vertical scrollbar so content doesn't shift
+     horizontally when it appears/disappears between pages. */
+  scrollbar-gutter: stable;
+}
+
 body {
   background: var(--color-canvas);
   color: var(--color-fg);
