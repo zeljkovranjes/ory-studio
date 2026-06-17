@@ -32,16 +32,58 @@ export async function createClientAction(
   if (grantTypes.length === 0) {
     return { error: "Select at least one grant type" };
   }
+
+  const lines = (name: string): string[] =>
+    String(formData.get(name) ?? "")
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+  const str = (name: string): string | undefined =>
+    String(formData.get(name) ?? "").trim() || undefined;
+
+  // Metadata is optional freeform JSON.
+  let metadata: Record<string, unknown> | undefined;
+  const metaRaw = String(formData.get("metadata") ?? "").trim();
+  if (metaRaw) {
+    try {
+      const parsed = JSON.parse(metaRaw);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        return { error: "Metadata must be a JSON object" };
+      }
+      metadata = parsed as Record<string, unknown>;
+    } catch {
+      return { error: "Metadata must be valid JSON" };
+    }
+  }
+
+  // Validate the optional logout / post-logout URIs the same way as redirects.
+  const postLogout = parseRedirectUris(String(formData.get("post_logout_redirect_uris") ?? ""));
+  if (postLogout.invalid.length > 0) {
+    return { error: `Invalid post-logout redirect URI: ${postLogout.invalid.join(", ")}` };
+  }
+
   try {
     const client = await createOAuth2Client(await currentTenant(), {
-      client_name: String(formData.get("client_name") ?? "").trim() || undefined,
+      client_name: str("client_name"),
       grant_types: grantTypes,
       response_types: responseTypes.length > 0 ? responseTypes : ["code"],
       redirect_uris: redirectUris,
-      scope: String(formData.get("scope") ?? "").trim() || undefined,
+      scope: str("scope"),
       token_endpoint_auth_method: String(
         formData.get("auth_method") ?? "client_secret_basic",
       ),
+      audience: lines("audience"),
+      allowed_cors_origins: lines("allowed_cors_origins"),
+      client_uri: str("client_uri"),
+      policy_uri: str("policy_uri"),
+      tos_uri: str("tos_uri"),
+      contacts: lines("contacts"),
+      skip_consent: formData.get("skip_consent") === "on",
+      backchannel_logout_uri: str("backchannel_logout_uri"),
+      frontchannel_logout_uri: str("frontchannel_logout_uri"),
+      post_logout_redirect_uris: postLogout.uris,
+      jwks_uri: str("jwks_uri"),
+      metadata,
     });
     return { client };
   } catch (err) {

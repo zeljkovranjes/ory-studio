@@ -17,6 +17,18 @@ export interface OAuth2Client {
   policy_uri?: string;
   tos_uri?: string;
   contacts?: string[];
+  // Consent
+  skip_consent?: boolean;
+  // OIDC logout
+  backchannel_logout_uri?: string;
+  backchannel_logout_session_required?: boolean;
+  frontchannel_logout_uri?: string;
+  frontchannel_logout_session_required?: boolean;
+  post_logout_redirect_uris?: string[];
+  // Advanced
+  jwks_uri?: string;
+  allowed_cors_origins?: string[];
+  metadata?: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
 }
