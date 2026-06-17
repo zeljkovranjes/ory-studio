@@ -6,9 +6,9 @@ import { saveKratosPatches } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 import { readKratosRaw } from "@/lib/kratos-config";
 import {
-  addProvider,
   PROVIDERS_PATH,
   removeProvider,
+  upsertProvider,
 } from "@/lib/kratos-social";
 
 export async function saveOidcGeneral(formData: FormData): Promise<void> {
@@ -33,22 +33,32 @@ export async function saveOidcGeneral(formData: FormData): Promise<void> {
   flashRedirect("/social-signin", result);
 }
 
-export async function addOidcProvider(formData: FormData): Promise<void> {
+export async function upsertOidcProvider(formData: FormData): Promise<void> {
   await requireSession();
   const config = await readKratosRaw();
   if ("error" in config) {
     flashRedirect("/social-signin", { ok: false, error: String(config.error) });
   }
+  const isEdit = formData.get("is_edit") === "true";
   let providers;
   try {
-    providers = addProvider(config, {
-      id: String(formData.get("id") ?? "").trim(),
-      provider: String(formData.get("provider") ?? ""),
-      clientId: String(formData.get("client_id") ?? "").trim(),
-      clientSecret: String(formData.get("client_secret") ?? ""),
-      issuerUrl: String(formData.get("issuer_url") ?? "").trim(),
-      scope: String(formData.get("scope") ?? ""),
-    });
+    providers = upsertProvider(
+      config,
+      {
+        id: String(formData.get("id") ?? "").trim(),
+        provider: String(formData.get("provider") ?? ""),
+        clientId: String(formData.get("client_id") ?? "").trim(),
+        clientSecret: String(formData.get("client_secret") ?? ""),
+        label: String(formData.get("label") ?? ""),
+        issuerUrl: String(formData.get("issuer_url") ?? ""),
+        scope: String(formData.get("scope") ?? ""),
+        microsoftTenant: String(formData.get("microsoft_tenant") ?? ""),
+        subjectSource: String(formData.get("subject_source") ?? ""),
+        appleTeamId: String(formData.get("apple_team_id") ?? ""),
+        applePrivateKeyId: String(formData.get("apple_private_key_id") ?? ""),
+      },
+      { isEdit },
+    );
   } catch (err) {
     flashRedirect("/social-signin", {
       ok: false,

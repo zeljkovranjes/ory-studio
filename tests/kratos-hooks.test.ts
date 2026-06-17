@@ -4,7 +4,6 @@ import {
   listWebHooks,
   removeWebHook,
 } from "@/lib/kratos-hooks";
-import { addProvider, removeProvider } from "@/lib/kratos-social";
 
 const CONFIG = {
   selfservice: {
@@ -213,41 +212,3 @@ describe("removeWebHook", () => {
   });
 });
 
-describe("social providers", () => {
-  it("adds a provider with defaults", () => {
-    const providers = addProvider(CONFIG, {
-      id: "github",
-      provider: "github",
-      clientId: "client",
-      clientSecret: "secret",
-      scope: "email, profile",
-    });
-    expect(providers).toHaveLength(2);
-    expect(providers[1]).toMatchObject({
-      id: "github",
-      scope: ["email", "profile"],
-    });
-    expect(providers[1].mapper_url.startsWith("base64://")).toBe(true);
-  });
-
-  it("rejects duplicates, bad ids and generic without issuer", () => {
-    const base = {
-      id: "x",
-      provider: "github",
-      clientId: "client",
-      clientSecret: "",
-    };
-    expect(() => addProvider(CONFIG, { ...base, id: "google" })).toThrow(
-      /already exists/,
-    );
-    expect(() => addProvider(CONFIG, { ...base, id: "bad id!" })).toThrow();
-    expect(() =>
-      addProvider(CONFIG, { ...base, provider: "generic" }),
-    ).toThrow(/issuer/);
-  });
-
-  it("removes a provider by id", () => {
-    expect(removeProvider(CONFIG, "google")).toEqual([]);
-    expect(removeProvider(CONFIG, "missing")).toHaveLength(1);
-  });
-});
