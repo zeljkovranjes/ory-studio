@@ -43,6 +43,22 @@ describe("requireSession", () => {
     await expect(requireSession()).rejects.toBeInstanceOf(UnauthorizedError);
   });
 
+  it("rejects a token forged with the constant 'derived:' fallback when no secret is configured", async () => {
+    // No STUDIO_SESSION_SECRET and no STUDIO_ADMIN_PASSWORD: the deploy is
+    // locked. A token HMAC'd with the publicly-known "derived:" constant must
+    // NOT authenticate (the forgery the audit caught).
+    delete process.env.STUDIO_SESSION_SECRET;
+    delete process.env.STUDIO_ADMIN_PASSWORD;
+    const crypto = await import("crypto");
+    const exp = String(Math.floor(Date.now() / 1000) + 3600);
+    const sig = crypto
+      .createHmac("sha256", "derived:")
+      .update(exp)
+      .digest("base64url");
+    cookieValue = `${exp}.${sig}`;
+    await expect(requireSession()).rejects.toBeInstanceOf(UnauthorizedError);
+  });
+
   it("throws UnauthorizedError when no session cookie is present", async () => {
     await expect(requireSession()).rejects.toBeInstanceOf(UnauthorizedError);
   });

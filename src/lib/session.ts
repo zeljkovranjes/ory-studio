@@ -34,9 +34,21 @@ async function hmac(secret: string, data: string): Promise<string> {
 }
 
 /**
+ * Whether a real signing secret is configured. If neither STUDIO_SESSION_SECRET
+ * nor STUDIO_ADMIN_PASSWORD is set, there is NO secret — and a derived value of
+ * `"derived:"` would be a publicly-known constant, lettings anyone forge a
+ * session cookie. So in that state no token may be considered valid.
+ */
+function hasConfiguredSecret(): boolean {
+  return Boolean(
+    process.env.STUDIO_SESSION_SECRET || process.env.STUDIO_ADMIN_PASSWORD,
+  );
+}
+
+/**
  * Session signing secret. Prefers STUDIO_SESSION_SECRET; otherwise derives a
  * stable secret from the admin password so tokens survive restarts without
- * extra config.
+ * extra config. Only meaningful when hasConfiguredSecret() is true.
  */
 export function sessionSecret(): string {
   return (
@@ -67,6 +79,9 @@ export async function verifySessionToken(
   nowSeconds: number,
 ): Promise<boolean> {
   if (!token) return false;
+  // No real signing secret → the deploy is locked; no token (forged with the
+  // constant "derived:" fallback or otherwise) may be accepted.
+  if (!hasConfiguredSecret()) return false;
   const dot = token.indexOf(".");
   if (dot === -1) return false;
   const payload = token.slice(0, dot);
