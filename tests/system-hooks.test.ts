@@ -61,6 +61,32 @@ describe("buildSystemHookPatches", () => {
     ).toBe(false);
   });
 
+  it("also injects into method-specific blocks so overrides don't suppress it", () => {
+    // registration.after.password.hooks holds the session hook; Kratos ignores
+    // the global after.hooks for the password method, so the collector hook must
+    // land in the password block too (this was the signup-not-tracked bug).
+    const config = {
+      selfservice: {
+        flows: {
+          registration: {
+            after: { password: { hooks: [{ hook: "session" }] } },
+          },
+        },
+      },
+    };
+    const regPatches = buildSystemHookPatches(config, BASE, TOKEN).filter((p) =>
+      p.path.includes("registration"),
+    );
+    const paths = regPatches.map((p) => p.path.join("."));
+    expect(paths).toContain("selfservice.flows.registration.after.hooks");
+    expect(paths).toContain(
+      "selfservice.flows.registration.after.password.hooks",
+    );
+    const pw = regPatches.find((p) => p.path.includes("password"))!;
+    const hooks = pw.value as { hook: string }[];
+    expect(hooks.map((h) => h.hook)).toEqual(["session", "web_hook"]);
+  });
+
   it("keeps user hooks when appending", () => {
     const config = {
       selfservice: {

@@ -37,6 +37,48 @@ interface RawHook {
   config?: { url?: string };
 }
 
+function collectorHook(url: string, token: string) {
+  return {
+    hook: "web_hook",
+    config: {
+      url,
+      method: "POST",
+      body: collectorBodyUrl(),
+      // analytics must never block a user flow
+      response: { ignore: true },
+      auth: {
+        type: "api_key",
+        config: { name: "X-Collector-Token", value: token, in: "header" },
+      },
+    },
+  };
+}
+
+/**
+ * Hook containers to inject into for a flow's `after` timing: the global
+ * `after.hooks`, plus every method-specific block already present (e.g.
+ * `after.password.hooks`). Kratos IGNORES the global `after.hooks` for any
+ * method that defines its own `after.<method>.hooks` (registration's password
+ * block holds the `session` hook), so the collector hook must also live in
+ * those blocks or it silently never fires. Injecting into both fires the hook
+ * exactly once per method (a method uses either its block or the global, never
+ * both).
+ */
+function afterHookContainers(config: unknown, flow: string): (string | undefined)[] {
+  const after = getPath<Record<string, unknown>>(
+    config,
+    ["selfservice", "flows", flow, "after"],
+    {},
+  );
+  const containers: (string | undefined)[] = [undefined]; // global after.hooks
+  for (const key of Object.keys(after)) {
+    if (key === "hooks") continue;
+    const block = after[key];
+    if (block && typeof block === "object") containers.push(key);
+  }
+  return containers;
+}
+
 /**
  * Build the patches that add a collector web_hook after each flow.
  * @param config parsed kratos.yml
@@ -52,53 +94,24 @@ export function buildSystemHookPatches(
   const patches: YamlPatch[] = [];
   for (const target of SYSTEM_HOOK_TARGETS) {
     const url = `${cleanBase}/api/internal/events/${target.event}`;
-    const path = hookContainerPath(target.flow, "after");
-    const existing = getPath<RawHook[]>(config, path, []);
-    if (existing.some((hook) => hook.config?.url === url)) continue;
-    patches.push({
-      path,
-      value: [
-        ...existing,
-        {
-          hook: "web_hook",
-          config: {
-            url,
-            method: "POST",
-            body: collectorBodyUrl(),
-            // analytics must never block a user flow
-            response: { ignore: true },
-            auth: {
-              type: "api_key",
-              config: {
-                name: "X-Collector-Token",
-                value: token,
-                in: "header",
-              },
-            },
-          },
-        },
-      ],
-    });
+    for (const method of afterHookContainers(config, target.flow)) {
+      const path = hookContainerPath(target.flow, "after", method);
+      const existing = getPath<RawHook[]>(config, path, []);
+      if (existing.some((hook) => hook.config?.url === url)) continue;
+      patches.push({
+        path,
+        value: [...existing, collectorHook(url, token)],
+      });
+    }
   }
   return patches;
 }
 
-/** True when every flow already has its collector hook. */
+/** True when no collector-hook patches remain to apply (all containers covered). */
 export function systemHooksInstalled(
   config: unknown,
   baseUrl: string,
 ): boolean {
-  const cleanBase = baseUrl.replace(/\/$/, "");
-  return SYSTEM_HOOK_TARGETS.every((target) => {
-    const hooks = getPath<RawHook[]>(
-      config,
-      hookContainerPath(target.flow, "after"),
-      [],
-    );
-    return hooks.some(
-      (hook) =>
-        hook.config?.url ===
-        `${cleanBase}/api/internal/events/${target.event}`,
-    );
-  });
+  // A placeholder token is fine here — installed-ness is keyed on the URL only.
+  return buildSystemHookPatches(config, baseUrl, "").length === 0;
 }
