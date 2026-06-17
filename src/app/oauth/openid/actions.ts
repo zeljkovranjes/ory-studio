@@ -2,7 +2,7 @@
 
 import { requireSession } from "@/lib/require-session";
 
-import { saveHydraPatches } from "@/lib/config-engine";
+import { saveHydraPatches, type YamlPatch } from "@/lib/config-engine";
 import { flashRedirect } from "@/lib/flash";
 
 const PAGE = "/oauth/openid";
@@ -14,9 +14,19 @@ function list(formData: FormData, name: string): string[] {
     .filter(Boolean);
 }
 
+// Discovery URL overrides under webfinger.oidc_discovery. Empty clears the
+// override so Hydra falls back to the issuer-derived default.
+const WEBFINGER_URL_FIELDS: [string, string][] = [
+  ["jwks_url", "JWKS URL"],
+  ["token_url", "Token URL"],
+  ["auth_url", "Auth URL"],
+  ["userinfo_url", "Userinfo URL"],
+  ["client_registration_url", "Client Registration URL"],
+];
+
 export async function saveWebfinger(formData: FormData): Promise<void> {
   await requireSession();
-  const result = await saveHydraPatches([
+  const patches: YamlPatch[] = [
     {
       path: ["webfinger", "oidc_discovery", "supported_claims"],
       value: list(formData, "supported_claims"),
@@ -25,8 +35,21 @@ export async function saveWebfinger(formData: FormData): Promise<void> {
       path: ["webfinger", "oidc_discovery", "supported_scope"],
       value: list(formData, "supported_scope"),
     },
-  ]);
-  flashRedirect(PAGE, result);
+  ];
+  for (const [key, label] of WEBFINGER_URL_FIELDS) {
+    const url = String(formData.get(key) ?? "").trim();
+    if (url && !/^https?:\/\//.test(url)) {
+      flashRedirect(PAGE, {
+        ok: false,
+        error: `${label} must start with http:// or https://`,
+      });
+    }
+    patches.push({
+      path: ["webfinger", "oidc_discovery", key],
+      value: url || undefined,
+    });
+  }
+  flashRedirect(PAGE, await saveHydraPatches(patches));
 }
 
 export async function saveSubjectIdentifiers(

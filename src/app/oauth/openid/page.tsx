@@ -41,9 +41,57 @@ export default async function OAuthOpenIdPage({
 
       <Card
         title="Discovery document"
-        description="Claims and scopes broadcast in the openid-configuration document. 'sub' and the standard scopes are always included."
+        description="Overwrite URLs and claims in the openid-configuration document. Leave a URL empty to use the issuer-derived default. Applies to all OAuth 2.0 clients."
       >
         <form action={saveWebfinger}>
+          <TextField
+            name="jwks_url"
+            label="JWKS URL"
+            description="JSON Web Key Set endpoint. Empty = derived from the issuer."
+            defaultValue={getPath(
+              config,
+              ["webfinger", "oidc_discovery", "jwks_url"],
+              "",
+            )}
+            mono
+            wide
+          />
+          <TextField
+            name="token_url"
+            label="Token URL"
+            description="OAuth 2.0 token endpoint."
+            defaultValue={getPath(
+              config,
+              ["webfinger", "oidc_discovery", "token_url"],
+              "",
+            )}
+            mono
+            wide
+          />
+          <TextField
+            name="auth_url"
+            label="Auth URL"
+            description="OAuth 2.0 authorization endpoint."
+            defaultValue={getPath(
+              config,
+              ["webfinger", "oidc_discovery", "auth_url"],
+              "",
+            )}
+            mono
+            wide
+          />
+          <TextField
+            name="userinfo_url"
+            label="Userinfo URL"
+            description="OAuth 2.0 userinfo endpoint."
+            defaultValue={getPath(
+              config,
+              ["webfinger", "oidc_discovery", "userinfo_url"],
+              "",
+            )}
+            mono
+            wide
+          />
           <TextField
             name="supported_claims"
             label="Supported Claims"
@@ -65,6 +113,18 @@ export default async function OAuthOpenIdPage({
               ["webfinger", "oidc_discovery", "supported_scope"],
               [],
             ).join(" ")}
+            mono
+            wide
+          />
+          <TextField
+            name="client_registration_url"
+            label="Client Registration URL"
+            description="Dynamic Client Registration endpoint to broadcast. Empty = not broadcast."
+            defaultValue={getPath(
+              config,
+              ["webfinger", "oidc_discovery", "client_registration_url"],
+              "",
+            )}
             mono
             wide
           />
