@@ -110,6 +110,29 @@ function validate(input: TenantInput): void {
       throw new Error(`${label} must be an http(s) URL`);
     }
   }
+  // Config paths are written to by the config engine — confine them to the
+  // config directory so a tenant record can't be used for arbitrary file write.
+  for (const [label, value] of [
+    ["Kratos config path", input.kratosConfigPath],
+    ["Hydra config path", input.hydraConfigPath],
+    ["Keto namespaces path", input.ketoNamespacesPath],
+  ] as const) {
+    assertSafeConfigPath(label, value);
+  }
+}
+
+const CONFIG_PATH_PREFIXES = ["/etc/config/", "./config/", "config/"];
+
+function assertSafeConfigPath(label: string, value?: string): void {
+  if (!value) return;
+  if (value.includes("..")) {
+    throw new Error(`${label} must not contain ".."`);
+  }
+  if (!CONFIG_PATH_PREFIXES.some((p) => value.startsWith(p))) {
+    throw new Error(
+      `${label} must be under the config directory (e.g. ./config/... or /etc/config/...)`,
+    );
+  }
 }
 
 export async function createTenant(input: TenantInput): Promise<void> {
