@@ -1,8 +1,29 @@
 import { describe, expect, it } from "vitest";
 import {
   buildSystemHookPatches,
+  isCollectorHookUrl,
   systemHooksInstalled,
 } from "@/lib/system-hooks";
+
+describe("isCollectorHookUrl", () => {
+  it("matches the studio's internal collector hooks", () => {
+    expect(
+      isCollectorHookUrl("http://studio:3000/api/internal/events/login"),
+    ).toBe(true);
+    expect(
+      isCollectorHookUrl("https://console.example.com/api/internal/events/signup"),
+    ).toBe(true);
+  });
+
+  it("does not match user webhooks or empty values", () => {
+    expect(isCollectorHookUrl("https://api.example.com/audit")).toBe(false);
+    expect(isCollectorHookUrl("https://hooks.example.com/events/login")).toBe(
+      false,
+    );
+    expect(isCollectorHookUrl(undefined)).toBe(false);
+    expect(isCollectorHookUrl("")).toBe(false);
+  });
+});
 
 const BASE = "http://studio:3000";
 const TOKEN = "test-token";

@@ -1,5 +1,6 @@
 import { readKratosRaw } from "@/lib/kratos-config";
 import { listWebHooks } from "@/lib/kratos-hooks";
+import { isCollectorHookUrl } from "@/lib/system-hooks";
 import {
   Badge,
   Card,
@@ -30,7 +31,11 @@ export default async function ActionsPage({
     );
   }
 
-  const hooks = listWebHooks(config);
+  // Hide the studio's own analytics collector webhooks — they're managed
+  // automatically (Activity capture) and aren't user-facing actions.
+  const hooks = listWebHooks(config).filter(
+    (hook) => !isCollectorHookUrl(hook.url),
+  );
 
   return (
     <>

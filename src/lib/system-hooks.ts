@@ -20,6 +20,18 @@ export function collectorBodyUrl(): string {
   return `base64://${Buffer.from(COLLECTOR_BODY_JSONNET, "utf8").toString("base64")}`;
 }
 
+/** Path that identifies the studio's own analytics collector webhooks. */
+export const COLLECTOR_PATH = "/api/internal/events/";
+
+/**
+ * True when a webhook URL is one of the studio's internal collector hooks.
+ * These are managed automatically and are hidden from the user-facing Actions
+ * list so they don't clutter it or get edited/removed by hand.
+ */
+export function isCollectorHookUrl(url: string | undefined): boolean {
+  return !!url && url.includes(COLLECTOR_PATH);
+}
+
 /** Flow/timing → collector event name. */
 export const SYSTEM_HOOK_TARGETS: {
   flow: string;
