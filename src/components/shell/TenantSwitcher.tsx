@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { switchTenantAction } from "@/app/settings/tenants/actions";
+import { useAnchoredMenu } from "@/components/use-anchored-menu";
 
 export interface TenantOption {
   slug: string;
@@ -18,16 +20,8 @@ export function TenantSwitcher({
   current?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function onDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [open]);
+  const close = useCallback(() => setOpen(false), []);
+  const { btnRef, menuRef, rect } = useAnchoredMenu(open, close);
 
   const activeName =
     tenants.find((t) => t.slug === current)?.name ??
@@ -35,8 +29,9 @@ export function TenantSwitcher({
     "No tenants";
 
   return (
-    <div ref={ref} className="relative">
+    <>
       <button
+        ref={btnRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-1.5 rounded border border-border px-2 py-1 text-sm hover:bg-bg-subtle"
@@ -45,8 +40,17 @@ export function TenantSwitcher({
         <span className="font-medium">{activeName}</span>
         <span className="text-fg-subtle">▾</span>
       </button>
-      {open ? (
-        <div className="absolute left-0 z-20 mt-1 w-56 rounded-md border border-border bg-surface py-1 shadow-lg">
+      {open && rect
+        ? createPortal(
+            <div
+              ref={menuRef}
+              style={{
+                position: "fixed",
+                top: rect.bottom + 4,
+                left: rect.left,
+              }}
+              className="z-50 w-56 rounded-md border border-border bg-surface py-1 shadow-lg"
+            >
           {tenants.length === 0 ? (
             <div className="px-3 py-2 text-sm text-fg-muted">
               No tenants registered.
@@ -68,16 +72,18 @@ export function TenantSwitcher({
               </form>
             ))
           )}
-          <div className="my-1 border-t border-border" />
-          <Link
-            href="/settings/tenants"
-            onClick={() => setOpen(false)}
-            className="block px-3 py-1.5 text-sm text-fg-muted hover:bg-bg-subtle hover:text-fg"
-          >
-            Manage tenants
-          </Link>
-        </div>
-      ) : null}
-    </div>
+              <div className="my-1 border-t border-border" />
+              <Link
+                href="/settings/tenants"
+                onClick={() => setOpen(false)}
+                className="block px-3 py-1.5 text-sm text-fg-muted hover:bg-bg-subtle hover:text-fg"
+              >
+                Manage tenants
+              </Link>
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
   );
 }

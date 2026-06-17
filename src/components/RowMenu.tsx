@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
+import { useAnchoredMenu } from "./use-anchored-menu";
 
 export interface RowMenuItem {
   label: string;
@@ -13,25 +15,21 @@ export interface RowMenuItem {
   confirm?: string;
 }
 
-/** Console-style row options menu (⋮) with a click-away dropdown. */
+/**
+ * Console-style row options menu (⋮) with a click-away dropdown. The dropdown
+ * is rendered in a portal with fixed positioning so it floats above the page
+ * instead of being clipped by an `overflow` ancestor (e.g. the table's
+ * `overflow-x-auto` wrapper, which would otherwise show a scrollbar).
+ */
 export function RowMenu({ items }: { items: RowMenuItem[] }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function onDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [open]);
+  const close = useCallback(() => setOpen(false), []);
+  const { btnRef, menuRef, rect } = useAnchoredMenu(open, close);
 
   return (
-    <div ref={ref} className="relative inline-block text-left">
+    <>
       <button
+        ref={btnRef}
         type="button"
         aria-label="Row options"
         onClick={() => setOpen((v) => !v)}
@@ -39,46 +37,57 @@ export function RowMenu({ items }: { items: RowMenuItem[] }) {
       >
         <span className="text-lg leading-none">⋮</span>
       </button>
-      {open ? (
-        <div className="absolute right-0 z-10 mt-1 w-44 rounded-md border border-border bg-surface py-1 shadow-lg">
-          {items.map((item) =>
-            item.href ? (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="block px-3 py-1.5 text-sm text-fg hover:bg-bg-subtle"
-                onClick={() => setOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ) : (
-              <form
-                key={item.label}
-                action={item.action}
-                onSubmit={(e) => {
-                  if (item.confirm && !window.confirm(item.confirm)) {
-                    e.preventDefault();
-                  } else {
-                    setOpen(false);
-                  }
-                }}
-              >
-                {Object.entries(item.hiddenFields ?? {}).map(([k, v]) => (
-                  <input key={k} type="hidden" name={k} value={v} />
-                ))}
-                <button
-                  type="submit"
-                  className={`block w-full px-3 py-1.5 text-left text-sm hover:bg-bg-subtle ${
-                    item.danger ? "text-error" : "text-fg"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              </form>
-            ),
-          )}
-        </div>
-      ) : null}
-    </div>
+      {open && rect
+        ? createPortal(
+            <div
+              ref={menuRef}
+              style={{
+                position: "fixed",
+                top: rect.bottom + 4,
+                right: window.innerWidth - rect.right,
+              }}
+              className="z-50 w-44 rounded-md border border-border bg-surface py-1 shadow-lg"
+            >
+              {items.map((item) =>
+                item.href ? (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className="block px-3 py-1.5 text-sm text-fg hover:bg-bg-subtle"
+                    onClick={() => setOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                ) : (
+                  <form
+                    key={item.label}
+                    action={item.action}
+                    onSubmit={(e) => {
+                      if (item.confirm && !window.confirm(item.confirm)) {
+                        e.preventDefault();
+                      } else {
+                        setOpen(false);
+                      }
+                    }}
+                  >
+                    {Object.entries(item.hiddenFields ?? {}).map(([k, v]) => (
+                      <input key={k} type="hidden" name={k} value={v} />
+                    ))}
+                    <button
+                      type="submit"
+                      className={`block w-full px-3 py-1.5 text-left text-sm hover:bg-bg-subtle ${
+                        item.danger ? "text-error" : "text-fg"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  </form>
+                ),
+              )}
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
   );
 }
