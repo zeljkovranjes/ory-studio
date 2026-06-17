@@ -33,9 +33,11 @@ function TopBar({ tenancy }: { tenancy?: TenancyChrome }) {
             current={tenancy.current}
           />
         ) : null}
-        <span className="rounded border border-border px-1.5 py-0.5 text-xs text-fg-muted">
-          Development
-        </span>
+        {process.env.NODE_ENV !== "production" ? (
+          <span className="rounded border border-border px-1.5 py-0.5 text-xs text-fg-muted">
+            Development
+          </span>
+        ) : null}
       </div>
       <div className="flex items-center gap-5">
         <input
