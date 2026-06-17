@@ -3,6 +3,7 @@
 import { requireSession } from "@/lib/require-session";
 
 import { saveKratosPatches } from "@/lib/config-engine";
+import { parseHeaderMap } from "@/lib/header-map";
 import { flashRedirect } from "@/lib/flash";
 
 export async function saveEmailConfig(formData: FormData): Promise<void> {
@@ -29,6 +30,13 @@ export async function saveEmailConfig(formData: FormData): Promise<void> {
     {
       path: ["courier", "smtp", "from_name"],
       value: String(formData.get("from_name") ?? "") || undefined,
+    },
+    {
+      path: ["courier", "smtp", "headers"],
+      value: (() => {
+        const map = parseHeaderMap(String(formData.get("headers") ?? ""));
+        return Object.keys(map).length > 0 ? map : undefined;
+      })(),
     },
   ]);
   flashRedirect("/email-configuration", result);
