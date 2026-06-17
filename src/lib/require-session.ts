@@ -14,7 +14,7 @@
  */
 
 import { cookies } from "next/headers";
-import { SESSION_COOKIE, verifySessionToken } from "./session";
+import { SESSION_COOKIE, studioOpenMode, verifySessionToken } from "./session";
 
 export class UnauthorizedError extends Error {
   constructor() {
@@ -24,9 +24,8 @@ export class UnauthorizedError extends Error {
 }
 
 export async function requireSession(): Promise<void> {
-  // Mirror the middleware: with no admin password configured the studio is open
-  // (local dev), so actions must not require a session either.
-  if (!process.env.STUDIO_ADMIN_PASSWORD) return;
+  // Mirror the middleware: open mode (explicitly opted in) skips the check.
+  if (studioOpenMode()) return;
 
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;

@@ -45,6 +45,16 @@ export function sessionSecret(): string {
   );
 }
 
+/**
+ * "Open" (no-login) mode for local dev. It MUST be opted into explicitly with
+ * STUDIO_DEV_OPEN=true — never inferred from a blank STUDIO_ADMIN_PASSWORD, so a
+ * misconfigured deploy (empty password) fails CLOSED rather than exposing an
+ * admin console that wields the Docker socket.
+ */
+export function studioOpenMode(): boolean {
+  return process.env.STUDIO_DEV_OPEN === "true";
+}
+
 export async function createSessionToken(nowSeconds: number): Promise<string> {
   const exp = nowSeconds + SESSION_TTL_SECONDS;
   const payload = String(exp);

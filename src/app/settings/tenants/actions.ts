@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createTenant, deleteTenant } from "@/lib/tenants";
 import { TENANT_COOKIE } from "@/lib/tenant";
+import { secureCookies } from "@/lib/cookies";
 import { flashRedirect } from "@/lib/flash";
 
 const PAGE = "/settings/tenants";
@@ -55,7 +56,7 @@ export async function switchTenantAction(formData: FormData): Promise<void> {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
-    secure: process.env.STUDIO_SECURE_COOKIES === "true",
+    secure: await secureCookies(),
   });
   redirect("/identities");
 }

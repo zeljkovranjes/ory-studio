@@ -131,6 +131,8 @@ services:
       TENANCY_MODE: ${TENANCY_MODE:-single}
       STUDIO_ADMIN_USER: ${STUDIO_ADMIN_USER:-admin}
       STUDIO_ADMIN_PASSWORD: ${STUDIO_ADMIN_PASSWORD:-}
+      # Explicit opt-in for no-login local dev; without it a blank password fails closed.
+      STUDIO_DEV_OPEN: ${STUDIO_DEV_OPEN:-}
       ORY_KRATOS_ADMIN_URL: http://kratos:4434
       # Browser-facing public URL (used for display/SDK and browser redirects).
       ORY_KRATOS_PUBLIC_URL: http://localhost:4433

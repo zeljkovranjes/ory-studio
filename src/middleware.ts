@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
+import {
+  SESSION_COOKIE,
+  studioOpenMode,
+  verifySessionToken,
+} from "@/lib/session";
 
 /**
  * Studio access control via a signed session cookie. Unauthenticated requests
  * are redirected to /login (no credentials in the URL, so server actions work).
- * If STUDIO_ADMIN_PASSWORD is unset, the studio is open (local dev only).
+ * Open (no-login) mode requires the explicit STUDIO_DEV_OPEN=true flag — a blank
+ * admin password fails closed, not open.
  */
 export async function middleware(request: NextRequest) {
-  const password = process.env.STUDIO_ADMIN_PASSWORD;
-  if (!password) {
+  if (studioOpenMode()) {
     return NextResponse.next();
   }
 

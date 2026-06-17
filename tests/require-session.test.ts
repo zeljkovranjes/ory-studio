@@ -24,16 +24,23 @@ describe("requireSession", () => {
   afterEach(() => {
     delete process.env.STUDIO_SESSION_SECRET;
     delete process.env.STUDIO_ADMIN_PASSWORD;
+    delete process.env.STUDIO_DEV_OPEN;
   });
 
   it("uses the studio_session cookie name", () => {
     expect(SESSION_COOKIE).toBe("studio_session");
   });
 
-  it("is open (no session required) when no admin password is configured", async () => {
-    delete process.env.STUDIO_ADMIN_PASSWORD;
+  it("is open only when STUDIO_DEV_OPEN is explicitly true", async () => {
+    process.env.STUDIO_DEV_OPEN = "true";
     cookieValue = undefined;
     await expect(requireSession()).resolves.toBeUndefined();
+  });
+
+  it("fails closed (requires a session) when no password is set but dev-open is off", async () => {
+    delete process.env.STUDIO_ADMIN_PASSWORD;
+    cookieValue = undefined;
+    await expect(requireSession()).rejects.toBeInstanceOf(UnauthorizedError);
   });
 
   it("throws UnauthorizedError when no session cookie is present", async () => {
