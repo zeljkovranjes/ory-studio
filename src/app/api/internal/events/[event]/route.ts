@@ -7,10 +7,20 @@ import { enabledHttpsStreamUrls } from "@/lib/event-streams";
 import { verifyApiKey } from "@/lib/api-keys";
 import { DEFAULT_TENANT_ID } from "@/lib/tenant";
 
+// Shipped placeholder tokens must never authorize — otherwise the one
+// unauthenticated route is open to anyone who reads the defaults from the repo.
+const INSECURE_COLLECTOR_TOKENS = new Set([
+  "",
+  "dev-only-collector-token",
+  "generate-a-random-collector-token",
+]);
+
+const MAX_COLLECTOR_BODY_BYTES = 16 * 1024;
+
 /** True if the presented token is the env collector token or a valid studio key. */
 async function collectorAuthorized(provided: string): Promise<boolean> {
   const envToken = process.env.STUDIO_COLLECTOR_TOKEN;
-  if (envToken) {
+  if (envToken && !INSECURE_COLLECTOR_TOKENS.has(envToken)) {
     // Compare fixed-length digests so timing can't leak the token's length.
     const [a, b] = await Promise.all([
       sha256Hex(provided),
@@ -56,6 +66,12 @@ export async function POST(
   const provided = request.headers.get("x-collector-token") ?? "";
   if (!provided || !(await collectorAuthorized(provided))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  // Bound the body so a flood of large payloads can't be used to grow the DB.
+  const declaredLength = Number(request.headers.get("content-length") ?? 0);
+  if (declaredLength > MAX_COLLECTOR_BODY_BYTES) {
+    return NextResponse.json({ error: "payload too large" }, { status: 413 });
   }
 
   const { event } = await params;
