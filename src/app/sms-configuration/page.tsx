@@ -2,12 +2,20 @@ import { getPath, readKratosRaw } from "@/lib/kratos-config";
 import { Card, ErrorState, PageHeader } from "@/components/ui";
 import { Flash, SaveButton, SelectField, TextField } from "@/components/forms";
 import { saveSmsConfig } from "./actions";
+import { SmsAuthFields } from "./SmsAuthFields";
 
 export const dynamic = "force-dynamic";
 
 interface CourierChannel {
   id: string;
-  request_config?: { url?: string; method?: string };
+  request_config?: {
+    url?: string;
+    method?: string;
+    auth?: {
+      type?: string;
+      config?: { user?: string; name?: string; in?: string };
+    };
+  };
 }
 
 export default async function SmsConfigurationPage({
@@ -28,6 +36,7 @@ export default async function SmsConfigurationPage({
 
   const channels = getPath<CourierChannel[]>(config, ["courier", "channels"], []);
   const sms = channels.find((channel) => channel.id === "sms");
+  const auth = sms?.request_config?.auth;
 
   return (
     <>
@@ -61,6 +70,12 @@ export default async function SmsConfigurationPage({
               { value: "PUT", label: "PUT" },
               { value: "PATCH", label: "PATCH" },
             ]}
+          />
+          <SmsAuthFields
+            defaultType={auth?.type ?? "none"}
+            user={auth?.config?.user ?? ""}
+            apiKeyName={auth?.config?.name ?? ""}
+            apiKeyIn={auth?.config?.in ?? "header"}
           />
           <SaveButton />
         </form>
