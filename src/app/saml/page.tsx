@@ -41,7 +41,7 @@ export default async function SamlPage({
     <>
       <PageHeader
         title="Security Assertion Markup Language (SAML)"
-        description="SAML lets enterprise identity providers authenticate your users. Connections are bridged to Kratos as OIDC providers via Ory Polis. Add an IdP below — point it at its metadata URL or entity ID."
+        description="SAML lets enterprise identity providers authenticate your users. Connections are registered here and exposed to Kratos as OIDC providers. Add an IdP below — point it at its metadata URL or entity ID."
       />
       <Flash {...flash} />
 
@@ -115,7 +115,7 @@ export default async function SamlPage({
 
       <Card
         title="Add SAML connection"
-        description="Provide the identity provider's SAML metadata URL (preferred) or its entity ID. The connection is bridged to an OIDC provider for Kratos by Ory Polis."
+        description="Provide the identity provider's SAML metadata URL (preferred) or its entity ID. The connection is exposed to Kratos as an OIDC provider."
       >
         <form action={createSamlAction} className="max-w-xl">
           <TextField name="name" label="Connection name" placeholder="Acme Okta" />

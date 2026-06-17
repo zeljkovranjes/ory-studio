@@ -1,8 +1,8 @@
 /**
- * SAML connections — a Polis-style registry of SAML identity providers, scoped
- * to the active tenant. Ory Polis bridges SAML to OIDC, so each connection is
- * surfaced to Kratos as an OIDC provider; the studio stores the connection
- * metadata here. Ungated (unlike Ory Network, where SAML is Enterprise-only).
+ * SAML connections — a registry of SAML identity providers, scoped to the
+ * active tenant. Each connection is surfaced to Kratos as an OIDC provider; the
+ * studio stores the connection metadata here. Ungated (unlike Ory Network,
+ * where SAML is Enterprise-only).
  */
 
 import { ensureOnce, getPool } from "./db";
