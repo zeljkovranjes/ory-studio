@@ -2,8 +2,7 @@
 
 [![CI](https://github.com/notpointless/ory-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/notpointless/ory-studio/actions/workflows/ci.yml)
 
-Self-hosted console for the open-source Ory stack — one instance of Kratos, Hydra, Keto and
-friends with UI on top.
+Self-hosted console for the open-source Ory stack — one instance of Kratos, Hydra, Keto and Polis with UI on top.
 
 ## Usage
 
