@@ -56,6 +56,19 @@ export async function saveClaims(formData: FormData): Promise<void> {
   flashRedirect(PAGE, result);
 }
 
+export async function saveClientCredentials(
+  formData: FormData,
+): Promise<void> {
+  await requireSession();
+  const result = await saveHydraPatches([
+    {
+      path: ["oauth2", "client_credentials", "default_grant_allowed_scope"],
+      value: formData.get("default_grant_allowed_scope") === "on",
+    },
+  ]);
+  flashRedirect(PAGE, result);
+}
+
 export async function saveRefreshGrant(formData: FormData): Promise<void> {
   await requireSession();
   const grace = String(formData.get("grace_period") ?? "").trim();

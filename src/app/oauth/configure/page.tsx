@@ -1,7 +1,13 @@
 import { getPath, readHydraRaw } from "@/lib/kratos-config";
 import { Card, ErrorState, PageHeader } from "@/components/ui";
 import { Flash, SaveButton, TextField, Toggle } from "@/components/forms";
-import { saveClaims, saveIssuer, savePkce, saveRefreshGrant } from "./actions";
+import {
+  saveClaims,
+  saveClientCredentials,
+  saveIssuer,
+  savePkce,
+  saveRefreshGrant,
+} from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -119,6 +125,25 @@ export default async function OAuthGeneralPage({
             defaultChecked={getPath(
               config,
               ["oauth2", "pkce", "enforced_for_public_clients"],
+              false,
+            )}
+          />
+          <SaveButton />
+        </form>
+      </Card>
+
+      <Card
+        title="Client Credentials Grant"
+        description="The client credentials grant lets an application obtain a token for itself (not on behalf of a user). Applies to all OAuth 2.0 clients."
+      >
+        <form action={saveClientCredentials}>
+          <Toggle
+            name="default_grant_allowed_scope"
+            label="Default grant allowed scope"
+            description="Grant the client's full allowed scope by default when a client-credentials request asks for no specific scope."
+            defaultChecked={getPath(
+              config,
+              ["oauth2", "client_credentials", "default_grant_allowed_scope"],
               false,
             )}
           />
