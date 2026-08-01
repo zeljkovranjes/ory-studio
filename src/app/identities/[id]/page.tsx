@@ -18,6 +18,7 @@ import {
   Table,
 } from "@/components/ui";
 import { Flash } from "@/components/forms";
+import { ConfirmButton } from "@/components/ConfirmDialog";
 import { RecoveryCode } from "./RecoveryCode";
 import { TraitsEditor } from "./TraitsEditor";
 import { MetadataEditor } from "./MetadataEditor";
@@ -312,15 +313,17 @@ export default async function IdentityDetailPage({
         title="Danger zone"
         description="Deleting an identity is irreversible and removes its credentials, addresses and sessions."
       >
-        <form action={deleteIdentityAction}>
-          <input type="hidden" name="id" value={identity.id} />
-          <button
-            type="submit"
-            className="h-8 rounded bg-error-emphasis px-4 text-sm font-medium text-fg-on-accent hover:bg-error"
-          >
-            Delete identity permanently
-          </button>
-        </form>
+        <ConfirmButton
+          action={deleteIdentityAction}
+          hiddenFields={{ id: identity.id }}
+          title="Delete identity"
+          message={`${identityIdentifier(identity)} and all of its credentials, addresses and sessions will be permanently deleted. This cannot be undone.`}
+          confirmLabel="Delete identity"
+          pendingLabel="Deleting…"
+          className="h-8 rounded bg-error-emphasis px-4 text-sm font-medium text-fg-on-accent hover:bg-error"
+        >
+          Delete identity permanently
+        </ConfirmButton>
       </Card>
     </>
   );

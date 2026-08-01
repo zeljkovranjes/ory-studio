@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useAnchoredMenu } from "./use-anchored-menu";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 export interface RowMenuItem {
   label: string;
@@ -12,7 +13,10 @@ export interface RowMenuItem {
   action?: (formData: FormData) => void | Promise<void>;
   hiddenFields?: Record<string, string>;
   danger?: boolean;
+  /** When set, the action runs only after this is confirmed in a modal. */
   confirm?: string;
+  /** Verb for the modal's confirm button while the action runs. */
+  confirmPendingLabel?: string;
 }
 
 /**
@@ -23,7 +27,9 @@ export interface RowMenuItem {
  */
 export function RowMenu({ items }: { items: RowMenuItem[] }) {
   const [open, setOpen] = useState(false);
+  const [confirming, setConfirming] = useState<RowMenuItem | null>(null);
   const close = useCallback(() => setOpen(false), []);
+  const cancelConfirm = useCallback(() => setConfirming(null), []);
   const { btnRef, menuRef, rect } = useAnchoredMenu(open, close);
 
   return (
@@ -48,46 +54,68 @@ export function RowMenu({ items }: { items: RowMenuItem[] }) {
               }}
               className="z-50 w-44 rounded-md border border-border bg-surface py-1 shadow-lg"
             >
-              {items.map((item) =>
-                item.href ? (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    className="block px-3 py-1.5 text-sm text-fg hover:bg-bg-subtle"
-                    onClick={() => setOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                ) : (
-                  <form
-                    key={item.label}
-                    action={item.action}
-                    onSubmit={(e) => {
-                      if (item.confirm && !window.confirm(item.confirm)) {
-                        e.preventDefault();
-                      } else {
+              {items.map((item) => {
+                const itemClass = `block w-full px-3 py-1.5 text-left text-sm hover:bg-bg-subtle ${
+                  item.danger ? "text-error" : "text-fg"
+                }`;
+                if (item.href) {
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className="block px-3 py-1.5 text-sm text-fg hover:bg-bg-subtle"
+                      onClick={() => setOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                }
+                // Confirmable items hand off to the modal instead of submitting.
+                if (item.confirm) {
+                  return (
+                    <button
+                      key={item.label}
+                      type="button"
+                      className={itemClass}
+                      onClick={() => {
                         setOpen(false);
-                      }
-                    }}
-                  >
+                        setConfirming(item);
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                }
+                return (
+                  <form key={item.label} action={item.action}>
                     {Object.entries(item.hiddenFields ?? {}).map(([k, v]) => (
                       <input key={k} type="hidden" name={k} value={v} />
                     ))}
                     <button
                       type="submit"
-                      className={`block w-full px-3 py-1.5 text-left text-sm hover:bg-bg-subtle ${
-                        item.danger ? "text-error" : "text-fg"
-                      }`}
+                      className={itemClass}
+                      onClick={() => setOpen(false)}
                     >
                       {item.label}
                     </button>
                   </form>
-                ),
-              )}
+                );
+              })}
             </div>,
             document.body,
           )
         : null}
+      {confirming?.action ? (
+        <ConfirmDialog
+          action={confirming.action}
+          hiddenFields={confirming.hiddenFields}
+          title={confirming.label}
+          message={confirming.confirm}
+          confirmLabel={confirming.label}
+          pendingLabel={confirming.confirmPendingLabel}
+          onCancel={cancelConfirm}
+        />
+      ) : null}
     </>
   );
 }

@@ -102,7 +102,14 @@ export function CreateActionDialog() {
               </h2>
             </div>
 
-            <form action={formAction}>
+            <form
+              action={formAction}
+              onSubmit={(e) => {
+                // Only the final step may submit — blocks stray implicit
+                // submissions (e.g. Enter in a field) while still on step 1.
+                if (step !== 2) e.preventDefault();
+              }}
+            >
               {state.error ? (
                 <div className="mx-6 mt-5 rounded border border-error-muted bg-error-subtle px-4 py-2.5 text-sm text-error">
                   {state.error}
@@ -274,7 +281,15 @@ export function CreateActionDialog() {
                 ) : null}
               </div>
 
-              <div className="flex items-center justify-between border-t border-border px-6 py-4">
+              {/*
+                Keyed per step so React remounts the footer instead of morphing
+                the same <button> node: turning "Next" into a submit button
+                mid-click makes the browser submit the form on that same click.
+              */}
+              <div
+                key={step}
+                className="flex items-center justify-between border-t border-border px-6 py-4"
+              >
                 {step === 1 ? (
                   <>
                     <button

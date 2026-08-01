@@ -95,18 +95,31 @@ async function adminGet<T>(
   };
 }
 
+export type IdentityMatchMode = "exact" | "fuzzy";
+
 export async function listIdentities(
   tenant: TenantContext,
-  opts: { pageSize?: number; pageToken?: string; identifier?: string } = {},
+  opts: {
+    pageSize?: number;
+    pageToken?: string;
+    identifier?: string;
+    /** Fuzzy uses Kratos' similarity search instead of an exact match. */
+    match?: IdentityMatchMode;
+  } = {},
 ): Promise<PageResult<KratosIdentity>> {
   try {
+    // The two identifier filters are mutually exclusive — Kratos rejects both.
+    const fuzzy = opts.match === "fuzzy";
     const { data, link, total } = await adminGet<KratosIdentity[]>(
       tenant,
       "/admin/identities",
       {
         page_size: String(opts.pageSize ?? 25),
         page_token: opts.pageToken,
-        credentials_identifier: opts.identifier,
+        credentials_identifier: fuzzy ? undefined : opts.identifier,
+        preview_credentials_identifier_similar: fuzzy
+          ? opts.identifier
+          : undefined,
       },
     );
     return {
