@@ -98,43 +98,8 @@ export function SelectField({
   );
 }
 
-/** Segmented radio toggle (e.g. Exact / Fuzzy) for use inside GET forms. */
-export function SegmentedToggle({
-  name,
-  options,
-  value,
-}: {
-  name: string;
-  options: { value: string; label: string }[];
-  value: string;
-}) {
-  return (
-    <div className="inline-flex rounded border border-border p-0.5">
-      {options.map((option) => {
-        const active = option.value === value;
-        return (
-          <label
-            key={option.value}
-            className={`cursor-pointer rounded px-4 py-1 text-sm ${
-              active
-                ? "bg-accent-subtle font-medium text-accent-emphasis"
-                : "text-fg-muted hover:text-fg"
-            }`}
-          >
-            <input
-              type="radio"
-              name={name}
-              value={option.value}
-              defaultChecked={active}
-              className="sr-only"
-            />
-            {option.label}
-          </label>
-        );
-      })}
-    </div>
-  );
-}
+/** Segmented radio toggle (e.g. Exact / Fuzzy) — lives in its own client module. */
+export { SegmentedToggle } from "./SegmentedToggle";
 
 export function SaveButton({ label = "Save" }: { label?: string }) {
   return (

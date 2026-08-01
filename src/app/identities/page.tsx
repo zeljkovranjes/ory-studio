@@ -30,6 +30,7 @@ export default async function IdentitiesPage({
   const tenant = await currentTenant();
   const result = await listIdentities(tenant, {
     identifier: q,
+    match: mode,
     pageToken: page_token,
   });
 
@@ -80,6 +81,7 @@ export default async function IdentitiesPage({
               { value: "exact", label: "Exact" },
               { value: "fuzzy", label: "Fuzzy" },
             ]}
+            submitOnChange
           />
           <button
             type="submit"
@@ -164,7 +166,8 @@ export default async function IdentitiesPage({
                             action: deleteIdentityAction,
                             hiddenFields: { id: identity.id },
                             danger: true,
-                            confirm: `Delete ${label}? This cannot be undone.`,
+                            confirm: `${label} and all of its credentials, addresses and sessions will be permanently deleted. This cannot be undone.`,
+                            confirmPendingLabel: "Deleting…",
                           },
                         ]}
                       />
