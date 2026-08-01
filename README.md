@@ -4,6 +4,8 @@
 
 Self-hosted console for the open-source Ory stack — one instance of Kratos, Hydra and Keto with UI on top.
 
+![The ory-studio dashboard](./docs/dashboard.png)
+
 ## Usage
 
 See [`DEPLOY.md`](./DEPLOY.md) for setup, configuration, and running the studio.
@@ -27,10 +29,15 @@ See [`DEPLOY.md`](./DEPLOY.md) for setup, configuration, and running the studio.
 | Hydra public / admin | 4444 / 4445 |
 | Keto read / write | 4466 / 4467 |
 | Account experience UI | 4455 |
-| Mailpit (dev inbox) | 8025 |
+| Mailpit (dev inbox) | 8026 |
 
 ## Notes
 
 - Single-tenant by default; `TENANCY_MODE=multi` flips on the tenant layer.
 - The studio is protected by an HTTP Basic auth prompt (`STUDIO_ADMIN_USER` / `STUDIO_ADMIN_PASSWORD`).
 - v1 covers the identity core: Identities, Sessions, Authentication, Message delivery.
+
+## Alternatives
+
+As of 2026-08-01, [zeljkovranjes/ory-self-hosted-console](https://github.com/zeljkovranjes/ory-self-hosted-console)
+is a more stable alternative to this project.
